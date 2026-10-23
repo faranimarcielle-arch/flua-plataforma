@@ -5,11 +5,32 @@ renderNav("professor", login.profile);
 if (!login.profile || login.profile.role !== "teacher"){ $("#denied").hidden = false; throw new Error("not teacher"); }
 $("#students-card").hidden = false;
 $("#agenda-card").hidden = false;
-// Also sends any pending class notice (Google Calendar + e-mail) and shows whether Google is connected.
-callChat({ action: "agenda" }).then(r => { $("#gcal-status").textContent = r && r.google
-  ? "Google Agenda e e-mails: conectados." + (r.sent ? ` ${r.sent} aviso(s) enviado(s) agora.` : "")
-  : "Google Agenda e e-mails: ainda não configurados (faltam as chaves do Google no Supabase)."; })
-  .catch(e => { $("#gcal-status").textContent = "Google Agenda: " + (e.msg || "erro ao conectar."); });
+// Google Calendar + e-mails. Google sends the teacher back here with ?code=... after she allows access.
+const back = location.origin + location.pathname;
+const gq = new URLSearchParams(location.search);
+async function googleStatus(){
+  // Also sends any pending class notice and shows whether Google is connected.
+  try{
+    const r = await callChat({ action: "agenda" });
+    $("#gcal-status").textContent = r && r.google
+      ? "Google Agenda e e-mails: conectados." + (r.sent ? ` ${r.sent} aviso(s) enviado(s) agora.` : "")
+      : "Google Agenda e e-mails: ainda não conectados.";
+    $("#gcal-connect").textContent = r && r.google ? "Conectar de novo" : "Conectar Google Agenda";
+  }catch(e){ $("#gcal-status").textContent = "Google Agenda: " + (e.msg || "erro ao conectar."); }
+}
+$("#gcal-connect").addEventListener("click", async () => {
+  $("#gcal-status").textContent = "Abrindo o Google…";
+  try{ const r = await callChat({ action: "google_auth_url", redirect_uri: back }); location.assign(r.url); }
+  catch(e){ $("#gcal-status").textContent = e.msg; }
+});
+async function googleReturn(){
+  history.replaceState(null, "", back);
+  if (gq.has("error")){ $("#gcal-status").textContent = "A conexão com o Google foi cancelada."; return; }
+  $("#gcal-status").textContent = "Conectando…";
+  try{ await callChat({ action: "google_connect", code: gq.get("code"), state: gq.get("state"), redirect_uri: back }); await googleStatus(); }
+  catch(e){ $("#gcal-status").textContent = e.msg; }
+}
+if (gq.has("code") || gq.has("error")) googleReturn(); else googleStatus();
 
 const fmt = iso => new Date(iso).toLocaleString("pt-BR", { dateStyle:"short", timeStyle:"short" });
 let current = null;

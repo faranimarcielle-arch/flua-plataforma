@@ -191,19 +191,70 @@ const AGENDA_URL = Deno.env.get("APP_URL") ?? "https://faranimarcielle-arch.gith
 const CLASS_MINUTES = 30;
 
 let googleToken = { value: "", expires: 0 };
-async function googleAccess(): Promise<string | null> {
-  const id = Deno.env.get("GOOGLE_CLIENT_ID"), secret = Deno.env.get("GOOGLE_CLIENT_SECRET"), refresh = Deno.env.get("GOOGLE_REFRESH_TOKEN");
-  if (!id || !secret || !refresh) return null;
-  if (googleToken.value && Date.now() < googleToken.expires) return googleToken.value;
+const GOOGLE_SCOPES = "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/gmail.send";
+const googleClient = () => {
+  const id = Deno.env.get("GOOGLE_CLIENT_ID"), secret = Deno.env.get("GOOGLE_CLIENT_SECRET");
+  return id && secret ? { id, secret } : null;
+};
+async function googleTokenRequest(params: Record<string, string>) {
   const r = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: refresh, grant_type: "refresh_token" }),
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(params),
   });
   const j = await r.json().catch(() => ({}));
   if (!r.ok || !j.access_token) throw new Error("Google token: " + (j.error_description || j.error || r.status));
+  return j;
+}
+async function googleAccess(): Promise<string | null> {
+  const c = googleClient();
+  if (!c) return null;
+  if (googleToken.value && Date.now() < googleToken.expires) return googleToken.value;
+  // The token saved by the "Conectar" button wins; the secret is a manual fallback.
+  const { data } = await admin.from("google_credentials").select("refresh_token").eq("id", 1).maybeSingle();
+  const refresh = data?.refresh_token || Deno.env.get("GOOGLE_REFRESH_TOKEN");
+  if (!refresh) return null;
+  const j = await googleTokenRequest({ client_id: c.id, client_secret: c.secret, refresh_token: refresh, grant_type: "refresh_token" });
   googleToken = { value: j.access_token, expires: Date.now() + (Number(j.expires_in) - 60) * 1000 };
   return googleToken.value;
 }
+
+// "Conectar Google Agenda": the panel asks for the Google sign-in address, Google sends the teacher back
+// to the panel with a one-time code, and the panel hands the code here to be exchanged and stored.
+const okRedirect = (u: unknown): u is string =>
+  typeof u === "string" && ALLOWED_ORIGINS.some(o => u.startsWith(o + "/")) && /\/app\/professor\/$/.test(u) && u.length < 200;
+async function requireTeacher(userId: string) {
+  const { data } = await admin.from("profiles").select("role").eq("id", userId).single();
+  if (data?.role !== "teacher") throw new HttpError(403, "Só o professor pode fazer isso.");
+}
+async function googleAuthUrl(body: Record<string, unknown>) {
+  const c = googleClient();
+  if (!c) throw new HttpError(400, "Faltam GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET nos Secrets do Supabase.");
+  if (!okRedirect(body.redirect_uri)) throw new HttpError(400, "Endereço de retorno inválido.");
+  const state = crypto.randomUUID();
+  await admin.from("google_oauth_state").delete().lt("created_at", new Date(Date.now() - 3600000).toISOString());
+  await admin.from("google_oauth_state").insert({ state });
+  const q = new URLSearchParams({ client_id: c.id, redirect_uri: body.redirect_uri, response_type: "code", scope: GOOGLE_SCOPES,
+    access_type: "offline", prompt: "consent", include_granted_scopes: "true", login_hint: TEACHER_EMAIL, state });
+  return { url: "https://accounts.google.com/o/oauth2/v2/auth?" + q };
+}
+async function googleConnect(body: Record<string, unknown>) {
+  const c = googleClient();
+  if (!c) throw new HttpError(400, "Faltam GOOGLE_CLIENT_ID e GOOGLE_CLIENT_SECRET nos Secrets do Supabase.");
+  if (typeof body.code !== "string" || typeof body.state !== "string" || !okRedirect(body.redirect_uri)) throw new HttpError(400, "Pedido inválido.");
+  const { data: st } = await admin.from("google_oauth_state").delete().eq("state", body.state)
+    .gt("created_at", new Date(Date.now() - 3600000).toISOString()).select("state");
+  if (!st?.length) throw new HttpError(400, "A conexão expirou. Clique em Conectar de novo.");
+  let j;
+  try { j = await googleTokenRequest({ client_id: c.id, client_secret: c.secret, code: body.code, redirect_uri: body.redirect_uri, grant_type: "authorization_code" }); }
+  catch (e) { console.error(e); throw new HttpError(400, "O Google recusou a conexão. Clique em Conectar de novo."); }
+  if (!j.refresh_token) throw new HttpError(400, "O Google não enviou a autorização permanente. Clique em Conectar de novo.");
+  const granted = String(j.scope || "");
+  if (!granted.includes("calendar.events") || !granted.includes("gmail.send"))
+    throw new HttpError(400, "Faltou marcar uma das permissões (agenda e e-mail). Clique em Conectar de novo e marque as duas.");
+  await admin.from("google_credentials").upsert({ id: 1, refresh_token: j.refresh_token, updated_at: new Date().toISOString() });
+  googleToken = { value: j.access_token, expires: Date.now() + (Number(j.expires_in) - 60) * 1000 };
+  return { connected: true };
+}
+
 async function google(token: string, method: string, url: string, body?: unknown) {
   const r = await fetch(url, { method, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
   if (method === "DELETE" && (r.status === 404 || r.status === 410)) return null; // already gone
@@ -304,6 +355,10 @@ Deno.serve(async (req) => {
     if (!user) throw new HttpError(401, "Faça login de novo.");
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
     if (body.action === "agenda") return json(await agendaNotices(), 200, origin);
+    if (body.action === "google_auth_url" || body.action === "google_connect") {
+      await requireTeacher(user.id);
+      return json(body.action === "google_auth_url" ? await googleAuthUrl(body) : await googleConnect(body), 200, origin);
+    }
     const learner = await loadLearner(user.id);
     if (body.action === "start") return json({ opener: OPENER(learner.name) }, 200, origin);
     if (body.action === "reply") return json(await reply(learner, body), 200, origin);
