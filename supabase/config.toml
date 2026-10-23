@@ -1,0 +1,6 @@
+# Minimal Supabase CLI config, used only to deploy the edge functions.
+project_id = "flua-plataforma"
+
+[functions.chat]
+# The function checks the user's login itself (works with Supabase's new API keys).
+verify_jwt = false

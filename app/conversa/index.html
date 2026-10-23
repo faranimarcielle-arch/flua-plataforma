@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://ytbjwpmqirrfbonlywyq.supabase.co wss://ytbjwpmqirrfbonlywyq.supabase.co; media-src 'self' blob: https://ytbjwpmqirrfbonlywyq.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>FLUA · Conversa</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<main>
+  <div class="top">
+    <span class="logo" role="img" aria-label="FLUA">FLU<span class="logo-a">A</span></span>
+    <div class="row">
+      <a class="icon-btn" id="teacher-link" href="../professor/" hidden>Painel do professor</a>
+      <button class="icon-btn" id="logout" type="button">Sair</button>
+    </div>
+  </div>
+  <div>
+    <h1>Conversa com o Max</h1>
+    <p class="muted">Toque no microfone e fale em inglês no seu ritmo: pode pausar e pensar. Quando terminar, toque de novo para enviar.</p>
+  </div>
+
+  <div class="card">
+    <div class="chat" id="chat" lang="en" aria-live="polite"></div>
+    <div class="stage">
+      <button class="mic" id="mic" type="button" aria-label="Falar"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></svg></span></button>
+      <p class="state" id="state">Carregando…</p>
+      <p class="status" id="status" role="status"></p>
+      <button class="icon-btn" id="cancel-rec" type="button" hidden>Apagar e começar de novo</button>
+    </div>
+    <details>
+      <summary>Prefiro escrever</summary>
+      <div class="composer" style="margin-top:10px">
+        <textarea id="typed" rows="1" maxlength="500" lang="en" placeholder="Write in English…" aria-label="Escrever mensagem"></textarea>
+        <button class="btn primary" id="send-typed" type="button">Enviar</button>
+      </div>
+    </details>
+    <div class="row">
+      <button class="btn" id="finish" type="button" disabled>Terminar e ver meus pontos</button>
+      <button class="btn" id="restart" type="button">Nova conversa</button>
+    </div>
+  </div>
+
+  <div class="card" id="review" hidden></div>
+  <p class="small muted" id="support"></p>
+</main>
+<script type="module" src="conversa.js"></script>
+</body>
+</html>

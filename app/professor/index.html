@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://ytbjwpmqirrfbonlywyq.supabase.co wss://ytbjwpmqirrfbonlywyq.supabase.co; media-src https://ytbjwpmqirrfbonlywyq.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>FLUA · Painel do professor</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<main>
+  <div class="top">
+    <span class="logo" role="img" aria-label="FLUA">FLU<span class="logo-a">A</span></span>
+    <div class="row"><a class="icon-btn" href="../conversa/">Conversa</a><button class="icon-btn" id="logout" type="button">Sair</button></div>
+  </div>
+  <h1>Painel do professor</h1>
+  <p class="status err" id="denied" hidden>Esta área é só do professor.</p>
+
+  <div class="card" id="students-card" hidden>
+    <h2>Alunos</h2>
+    <p class="small muted">Para cadastrar um aluno: no Supabase, Authentication → Users → Add user → Send invitation, com o e-mail dele.</p>
+    <div id="students"></div>
+  </div>
+
+  <div class="card" id="student-card" hidden>
+    <div class="row" style="justify-content:space-between"><h2 id="st-name"></h2><span class="small muted" id="st-cost"></span></div>
+    <div class="row" style="align-items:flex-end">
+      <label class="f" for="st-display">Nome<input type="text" id="st-display" maxlength="60"></label>
+      <label class="f" for="st-level">Nível<select id="st-level"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
+      <label class="f" for="st-limit">Limite de IA por dia (US$)<input type="number" id="st-limit" min="0" max="5" step="0.01"></label>
+    </div>
+    <label class="f" for="st-interests">Interesses<input type="text" id="st-interests" maxlength="300"></label>
+    <label class="f" for="st-goal">Objetivo comunicativo<input type="text" id="st-goal" maxlength="300"></label>
+    <div class="row"><button class="btn primary" id="st-save" type="button">Salvar</button><span class="status" id="st-status" role="status"></span></div>
+    <h2>Conversas</h2>
+    <p class="small muted">O texto é a transcrição automática. Ouça o áudio para saber exatamente o que o aluno disse.</p>
+    <div id="convs"></div>
+  </div>
+</main>
+<script type="module" src="professor.js"></script>
+</body>
+</html>
