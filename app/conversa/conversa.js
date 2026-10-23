@@ -1,10 +1,9 @@
-import { supabase, requireLogin, callChat, logout, $, h } from "../lib.js";
+import { supabase, requireLogin, callChat, renderNav, $, h } from "../lib.js";
 
 const login = await requireLogin();
 if (!login) throw new Error("redirecting");
 const userId = login.session.user.id;
-if (login.profile && login.profile.role === "teacher") $("#teacher-link").hidden = false;
-$("#logout").addEventListener("click", logout);
+renderNav("conversa", login.profile);
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 const canSpeak = "speechSynthesis" in window;

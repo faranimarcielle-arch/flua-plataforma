@@ -1,6 +1,7 @@
-import { supabase, requireLogin, $ } from "../lib.js";
+import { supabase, requireLogin, renderNav, $ } from "../lib.js";
 const login = await requireLogin();
 if (!login) throw new Error("redirecting");
+renderNav("", login.profile);
 $("#form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const a = $("#password").value, b = $("#password2").value;

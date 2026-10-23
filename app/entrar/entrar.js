@@ -1,6 +1,6 @@
 import { supabase, APP, $ } from "../lib.js";
 const { data: { session } } = await supabase.auth.getSession();
-if (session) location.replace(APP + "conversa/");
+if (session) location.replace(APP + "inicio/");
 $("#form").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = $("#email").value.trim().toLowerCase(), password = $("#password").value;
@@ -9,7 +9,7 @@ $("#form").addEventListener("submit", async (e) => {
   $("#send").disabled = true; $("#status").textContent = "Entrando…";
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   $("#send").disabled = false;
-  if (!error){ location.replace(APP + "conversa/"); return; }
+  if (!error){ location.replace(APP + "inicio/"); return; }
   // One message for wrong e-mail or wrong password, so the page does not reveal who is a student.
   $("#status").textContent = /rate|limit|too many/i.test(error.message)
     ? "Muitas tentativas seguidas. Espere alguns minutos e tente de novo."

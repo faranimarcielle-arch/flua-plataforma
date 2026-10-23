@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://spwcyhjqdxasgloujbyz.supabase.co wss://spwcyhjqdxasgloujbyz.supabase.co; media-src 'self' blob: https://spwcyhjqdxasgloujbyz.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>FLUA · Início</title>
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<link rel="apple-touch-icon" href="../../img/apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<main>
+  <header id="nav"></header>
+  <div>
+    <h1 id="hello">Olá!</h1>
+    <p class="muted">Continue praticando. Você está no caminho certo!</p>
+  </div>
+  <div class="card goal-card" id="goal-card" hidden>
+    <p class="eyebrow">Seu objetivo agora</p>
+    <p class="big-text" id="goal"></p>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h2>Próxima aula</h2>
+      <div id="next"></div>
+      <a class="btn" href="../agenda/" style="align-self:flex-start">Ver agenda e marcar aulas</a>
+    </div>
+    <div class="card">
+      <h2>Conversa com o Max</h2>
+      <p class="muted">Pratique falando em inglês, no seu ritmo. Os pontos importantes aparecem no fim.</p>
+      <a class="btn primary" href="../conversa/" style="align-self:flex-start">Conversar agora</a>
+    </div>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between"><h2 id="cal-month"></h2><span class="small muted">◯ dia com aula</span></div>
+      <div class="cal" id="cal"></div>
+    </div>
+    <div class="card">
+      <h2>Contato</h2>
+      <p class="muted small">Dúvidas sobre aulas, horários ou o curso? Fale direto com a FLUA.</p>
+      <a class="btn primary" href="https://wa.me/5521996993031" target="_blank" rel="noopener" style="align-self:flex-start">WhatsApp · (21) 99699-3031</a>
+      <p class="small"><span class="muted">E-mail:</span> <b style="overflow-wrap:anywhere;user-select:all">marciellefarani@flua.onworkspace.com</b></p>
+    </div>
+  </div>
+</main>
+<script type="module" src="inicio.js"></script>
+</body>
+</html>

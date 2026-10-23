@@ -5,10 +5,12 @@ Plataforma da FLUA para alunos adultos: prática comunicativa, conversa por voz 
 ## O que já existe
 
 - `app/`: plataforma com login (Supabase):
-  - `app/entrar/`: login por e-mail, com link de acesso e sem senha. Só entram alunos cadastrados pelo professor.
+  - `app/entrar/`: login com e-mail e senha. Só entram alunos cadastrados pelo professor.
+  - `app/inicio/`: tela inicial do aluno, com objetivo, próxima aula, calendário e contato.
+  - `app/agenda/`: marcar, desmarcar e remarcar aulas. O link do Meet só é entregue no horário.
   - `app/conversa/`: conversa por voz com o Max. A IA é chamada pelo servidor, a voz do aluno fica gravada e há um limite diário de uso.
   - `app/professor/`: alunos, nível e objetivo, gasto com IA e conversas com o áudio original.
-- `supabase/migrations/`: banco de dados e regras de acesso. O aluno só vê o que é dele, o nível fica só com o professor e as mensagens são gravadas só pelo servidor.
+- `supabase/migrations/`: banco de dados e regras de acesso, incluindo as regras da agenda, que valem no próprio banco. O aluno só vê o que é dele, o nível fica só com o professor e as mensagens são gravadas só pelo servidor.
 - `supabase/functions/chat/`: função do servidor que conversa com a IA. A chave da Anthropic fica como segredo no Supabase.
 - `.github/workflows/supabase-functions.yml`: publica a função no Supabase a cada atualização.
 

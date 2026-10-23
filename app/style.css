@@ -36,7 +36,7 @@ button{cursor:pointer;color:inherit}
 .btn:disabled{opacity:.5;cursor:default}
 .icon-btn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:.8rem;font-weight:700;text-decoration:none}
 label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.9rem;color:var(--ink)}
-input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:10px 12px;font-weight:400;min-width:0}
+input[type=text],input[type=email],input[type=password],input[type=number],input[type=time],select,textarea{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:10px 12px;font-weight:400;min-width:0}
 .toggle{display:inline-flex;gap:8px;align-items:center;font-weight:700;font-size:.92rem;color:var(--ink)}
 .toggle input{width:18px;height:18px;accent-color:var(--accent)}
 .warn{background:var(--warn-soft);border-radius:12px;padding:10px 12px;font-size:.88rem}
@@ -73,3 +73,41 @@ details summary{cursor:pointer;font-weight:800;color:var(--ink)}
 .line:first-child{border-top:none}
 .pill{font-weight:800;background:var(--navy);color:var(--navy-ink);border-radius:10px;padding:3px 10px;font-size:.8rem}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* Menu */
+.menu{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.menu-item{border:none;background:none;color:var(--ink);font-weight:800;text-decoration:none;padding:7px 12px;border-radius:999px;font-size:.95rem}
+.menu-item.small{font-weight:700;font-size:.82rem;color:var(--muted)}
+.menu-item[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+/* Home & agenda */
+.grid2{display:grid;grid-template-columns:minmax(0,1fr);gap:16px}
+@media (min-width:760px){.grid2{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
+.goal-card{background:var(--navy);color:var(--navy-ink);border:none}
+.goal-card .eyebrow{color:var(--accent)}
+.eyebrow{font-size:.8rem;font-weight:800;color:var(--accent);letter-spacing:.02em}
+.big-text{font-family:var(--display);font-size:1.2rem;font-weight:800;line-height:1.3}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:.85rem;font-variant-numeric:tabular-nums}
+.cal .wd{font-weight:800;color:var(--ink);font-size:.78rem}
+.cal .d{aspect-ratio:1;display:grid;place-items:center;border-radius:50%}
+.cal .d.today{background:var(--accent);color:var(--accent-ink);font-weight:800}
+.cal .d.booked{box-shadow:inset 0 0 0 2px var(--accent);font-weight:800}
+.rules{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.day{display:flex;flex-direction:column;gap:8px;padding:12px 0;border-top:1px solid var(--line)}
+.day:first-child{border-top:none;padding-top:0}
+.day h3{font-size:1rem;text-transform:capitalize}
+.times{display:flex;flex-wrap:wrap;gap:8px}
+.slot{border:1.5px solid color-mix(in srgb,var(--accent) 45%,var(--line));background:var(--surface);color:var(--ink);border-radius:12px;padding:8px 14px;font-weight:800;font-variant-numeric:tabular-nums}
+.slot:hover:not(:disabled){background:var(--accent-soft)}
+.slot.mine{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.slot.taken{background:var(--surface-2);color:var(--muted);text-decoration:line-through;border-color:transparent}
+.slot.limit{background:var(--surface-2);color:var(--muted);border-style:dashed}
+.slot:disabled{cursor:default}
+.slot.sel{outline:3px solid var(--accent);outline-offset:2px}
+.confirm{background:var(--accent-soft);border-radius:12px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.cls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;padding:12px 0;border-top:1px solid var(--line)}
+.cls:first-child{border-top:none;padding-top:0}
+.cls .when{flex:1;min-width:180px}
+.cls .when b{display:block;color:var(--ink);font-family:var(--display);font-size:1.05rem}
+.att{font-size:.74rem;font-weight:800;border-radius:7px;padding:2px 8px;white-space:nowrap}
+.att-presente{background:var(--ok-soft);color:var(--ok)} .att-atraso{background:var(--warn-soft);color:var(--ink)}
+.att-falta{background:var(--bad-soft);color:var(--bad)} .att-justificada{background:var(--surface-2);color:var(--ink)}
+.att-sem-registro{background:var(--surface-2);color:var(--muted);border:1px dashed var(--muted)}

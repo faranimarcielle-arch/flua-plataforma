@@ -13,12 +13,25 @@
 </head>
 <body>
 <main>
-  <div class="top">
-    <picture class="brand"><source srcset="../../img/flua-logo-branco.webp" media="(prefers-color-scheme: dark)"><img src="../../img/flua-logo.webp" alt="FLUA" style="height:40px;width:auto;display:block"></picture>
-    <div class="row"><a class="icon-btn" href="../conversa/">Conversa</a><button class="icon-btn" id="logout" type="button">Sair</button></div>
-  </div>
+  <header id="nav"></header>
   <h1>Painel do professor</h1>
   <p class="status err" id="denied" hidden>Esta área é só do professor.</p>
+
+  <div class="card" id="agenda-card" hidden>
+    <h2>Agenda e horários</h2>
+    <label class="f" for="meet">Link padrão do Meet (o aluno só recebe no horário da aula)<input type="text" id="meet" maxlength="200" placeholder="https://meet.google.com/..."></label>
+    <div class="row"><button class="btn primary" id="meet-save" type="button">Salvar link</button><span class="status" id="meet-status" role="status"></span></div>
+    <h3>Horários da semana · aulas de 30 minutos</h3>
+    <div id="avail"></div>
+    <div class="row" style="align-items:flex-end">
+      <label class="f" for="av-day">Dia<select id="av-day"><option value="1">Segunda</option><option value="2">Terça</option><option value="3">Quarta</option><option value="4">Quinta</option><option value="5">Sexta</option><option value="6">Sábado</option><option value="0">Domingo</option></select></label>
+      <label class="f" for="av-time">Horário<input type="time" id="av-time" step="1800"></label>
+      <button class="btn" id="av-add" type="button">Adicionar horário</button>
+    </div>
+    <p class="status" id="av-status" role="status"></p>
+    <h3>Próximas aulas</h3>
+    <div id="all-upcoming"></div>
+  </div>
 
   <div class="card" id="students-card" hidden>
     <h2>Alunos</h2>
@@ -31,11 +44,15 @@
     <div class="row" style="align-items:flex-end">
       <label class="f" for="st-display">Nome<input type="text" id="st-display" maxlength="60"></label>
       <label class="f" for="st-level">Nível<select id="st-level"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
+      <label class="f" for="st-week">Aulas por semana<input type="number" id="st-week" min="1" max="7" step="1"></label>
       <label class="f" for="st-limit">Limite de IA por dia (US$)<input type="number" id="st-limit" min="0" max="5" step="0.01"></label>
     </div>
     <label class="f" for="st-interests">Interesses<input type="text" id="st-interests" maxlength="300"></label>
     <label class="f" for="st-goal">Objetivo comunicativo<input type="text" id="st-goal" maxlength="300"></label>
     <div class="row"><button class="btn primary" id="st-save" type="button">Salvar</button><span class="status" id="st-status" role="status"></span></div>
+    <div class="row" style="justify-content:space-between"><h2>Aulas e frequência</h2><span class="pill" id="st-rate"></span></div>
+    <p class="small muted">A presença é registrada quando o aluno toca em "Entrar na aula". Corrija quando precisar. Só você vê isto.</p>
+    <div id="st-classes"></div>
     <h2>Conversas</h2>
     <p class="small muted">O texto é a transcrição automática. Ouça o áudio para saber exatamente o que o aluno disse.</p>
     <div id="convs"></div>
