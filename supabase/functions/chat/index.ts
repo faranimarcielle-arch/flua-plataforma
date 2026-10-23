@@ -1,5 +1,6 @@
 // FLUA chat: the only place that talks to Claude. The API key stays here as a Supabase secret.
-// Actions: "reply" (one conversation turn), "review" (deferred feedback at the end), "retry" (check a new attempt).
+// Actions: "reply" (one conversation turn), "review" (deferred feedback at the end), "retry" (check a new attempt),
+// "agenda" (sends pending class notices to the teacher's Google Calendar and by e-mail).
 import Anthropic from "npm:@anthropic-ai/sdk@0.137.0";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.117.3";
 
@@ -180,6 +181,117 @@ Reply with only JSON: {"ok": boolean, "feedback_pt": "one short sentence"}` }] }
   return { ok: j.ok === true, feedback_pt: String(j.feedback_pt ?? "") };
 }
 
+// ---- Google Calendar + e-mail notices for classes -------------------------------------------
+// The teacher's Google account is authorised once (refresh token kept as a Supabase secret).
+// Each booking is an event in her calendar with the student as guest, so Google sends the student
+// the invitation, the change and the cancellation. A record e-mail goes to the student with a copy to her.
+const TZ = "America/Sao_Paulo";
+const TEACHER_EMAIL = Deno.env.get("TEACHER_EMAIL") ?? "marciellefarani@flua.onworkspace.com";
+const AGENDA_URL = Deno.env.get("APP_URL") ?? "https://faranimarcielle-arch.github.io/flua-plataforma/app/agenda/";
+const CLASS_MINUTES = 30;
+
+let googleToken = { value: "", expires: 0 };
+async function googleAccess(): Promise<string | null> {
+  const id = Deno.env.get("GOOGLE_CLIENT_ID"), secret = Deno.env.get("GOOGLE_CLIENT_SECRET"), refresh = Deno.env.get("GOOGLE_REFRESH_TOKEN");
+  if (!id || !secret || !refresh) return null;
+  if (googleToken.value && Date.now() < googleToken.expires) return googleToken.value;
+  const r = await fetch("https://oauth2.googleapis.com/token", {
+    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({ client_id: id, client_secret: secret, refresh_token: refresh, grant_type: "refresh_token" }),
+  });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok || !j.access_token) throw new Error("Google token: " + (j.error_description || j.error || r.status));
+  googleToken = { value: j.access_token, expires: Date.now() + (Number(j.expires_in) - 60) * 1000 };
+  return googleToken.value;
+}
+async function google(token: string, method: string, url: string, body?: unknown) {
+  const r = await fetch(url, { method, headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined });
+  if (method === "DELETE" && (r.status === 404 || r.status === 410)) return null; // already gone
+  const text = await r.text();
+  if (!r.ok) throw new Error(`Google ${method} ${r.status}: ${text.slice(0, 300)}`);
+  return text ? JSON.parse(text) : null;
+}
+
+const when = (iso: string) => {
+  const d = new Date(iso);
+  const day = d.toLocaleDateString("pt-BR", { timeZone: TZ, weekday: "long", day: "2-digit", month: "2-digit", year: "numeric" });
+  const t = (x: Date) => x.toLocaleTimeString("pt-BR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
+  return `${day}, das ${t(d)} às ${t(new Date(d.getTime() + CLASS_MINUTES * 60000))}`;
+};
+const endOf = (iso: string) => new Date(new Date(iso).getTime() + CLASS_MINUTES * 60000).toISOString();
+
+type Notice = { id: string; starts_at: string; status: string; gcal_event_id: string | null; notified_status: string | null; notified_starts_at: string | null; name: string | null; email: string };
+
+function eventBody(n: Notice) {
+  return {
+    summary: `Aula FLUA · ${n.name || n.email}`,
+    description: `Aula individual de inglês (30 minutos).\nPara entrar, abra a plataforma FLUA no horário da aula e toque em "Entrar na aula":\n${AGENDA_URL}`,
+    start: { dateTime: n.starts_at, timeZone: TZ },
+    end: { dateTime: endOf(n.starts_at), timeZone: TZ },
+    attendees: [{ email: n.email, displayName: n.name || undefined }],
+    reminders: { useDefault: true },
+    guestsCanModify: false, guestsCanInviteOthers: false,
+  };
+}
+
+// Gmail needs the message as base64url; the subject uses RFC 2047 so accents arrive intact.
+const b64 = (s: string) => btoa(String.fromCharCode(...new TextEncoder().encode(s)));
+async function sendMail(token: string, to: string, subject: string, text: string) {
+  const raw = [
+    `From: FLUA <${TEACHER_EMAIL}>`, `To: ${to}`, `Cc: ${TEACHER_EMAIL}`,
+    `Subject: =?UTF-8?B?${b64(subject)}?=`, "MIME-Version: 1.0",
+    "Content-Type: text/plain; charset=UTF-8", "Content-Transfer-Encoding: base64", "", b64(text),
+  ].join("\r\n");
+  await google(token, "POST", "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+    { raw: b64(raw).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "") });
+}
+
+async function processNotice(token: string, n: Notice) {
+  const cal = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
+  const first = (n.name || "").split(" ")[0] || "aluno(a)";
+  let subject = "", text = "", eventId = n.gcal_event_id;
+  if (n.status === "marcada" && !n.notified_status) {
+    if (!eventId) {
+      const ev = await google(token, "POST", `${cal}?sendUpdates=all`, eventBody(n));
+      eventId = ev.id;
+      await admin.from("bookings").update({ gcal_event_id: eventId }).eq("id", n.id);
+    }
+    subject = `Aula marcada: ${when(n.starts_at)}`;
+    text = `Olá, ${first}!\n\nSua aula foi marcada:\n${when(n.starts_at)} (horário de Brasília).`;
+  } else if (n.status === "marcada") {
+    if (eventId) await google(token, "PATCH", `${cal}/${encodeURIComponent(eventId)}?sendUpdates=all`, { start: { dateTime: n.starts_at, timeZone: TZ }, end: { dateTime: endOf(n.starts_at), timeZone: TZ } });
+    else { const ev = await google(token, "POST", `${cal}?sendUpdates=all`, eventBody(n)); eventId = ev.id; }
+    subject = `Aula remarcada: ${when(n.starts_at)}`;
+    text = `Olá, ${first}!\n\nSua aula foi remarcada.\nAntes: ${n.notified_starts_at ? when(n.notified_starts_at) : "-"}\nAgora: ${when(n.starts_at)} (horário de Brasília).`;
+  } else if (n.notified_status) {
+    if (eventId) await google(token, "DELETE", `${cal}/${encodeURIComponent(eventId)}?sendUpdates=all`);
+    eventId = null;
+    subject = `Aula desmarcada: ${when(n.starts_at)}`;
+    text = `Olá, ${first}!\n\nSua aula de ${when(n.starts_at)} foi desmarcada.\nEla volta para você: é só marcar outro horário na plataforma.`;
+  }
+  if (subject) {
+    text += `\n\nVer ou mudar suas aulas: ${AGENDA_URL}\n\nAbraços,\nFLUA English\n\nE-mail automático da plataforma FLUA. Dúvidas: WhatsApp (21) 99699-3031.`;
+    await sendMail(token, n.email, subject, text);
+  }
+  await admin.from("bookings").update({ notified_status: n.status, notified_starts_at: n.starts_at, gcal_event_id: eventId, sync_lock: null, sync_error: null }).eq("id", n.id);
+}
+
+async function agendaNotices() {
+  const token = await googleAccess();
+  if (!token) return { sent: 0, google: false };
+  const { data, error } = await admin.rpc("claim_booking_notices", { p_limit: 10 });
+  if (error) throw error;
+  let sent = 0;
+  for (const n of (data ?? []) as Notice[]) {
+    try { await processNotice(token, n); sent++; }
+    catch (e) {
+      console.error("agenda notice", n.id, e);
+      await admin.from("bookings").update({ sync_lock: null, sync_error: String(e).slice(0, 500) }).eq("id", n.id);
+    }
+  }
+  return { sent, google: true };
+}
+
 Deno.serve(async (req) => {
   const origin = req.headers.get("Origin");
   requestedHeaders = (req.headers.get("Access-Control-Request-Headers") ?? "").replace(/[^\w,\s-]/g, "").slice(0, 300);
@@ -191,6 +303,7 @@ Deno.serve(async (req) => {
     const { data: { user } } = token ? await admin.auth.getUser(token) : { data: { user: null } };
     if (!user) throw new HttpError(401, "Faça login de novo.");
     const body = await req.json().catch(() => ({})) as Record<string, unknown>;
+    if (body.action === "agenda") return json(await agendaNotices(), 200, origin);
     const learner = await loadLearner(user.id);
     if (body.action === "start") return json({ opener: OPENER(learner.name) }, 200, origin);
     if (body.action === "reply") return json(await reply(learner, body), 200, origin);

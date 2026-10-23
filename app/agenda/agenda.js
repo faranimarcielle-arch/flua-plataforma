@@ -1,4 +1,4 @@
-import { supabase, requireLogin, renderNav, $, h, fmtSlot, fmtDay, dayKey, rpcError } from "../lib.js";
+import { supabase, callChat, requireLogin, renderNav, $, h, fmtSlot, fmtDay, dayKey, rpcError } from "../lib.js";
 const login = await requireLogin();
 if (!login) throw new Error("redirecting");
 renderNav("agenda", login.profile);
@@ -37,7 +37,7 @@ function render(){
               const { error } = await supabase.rpc("cancel_class", { p_id: b.id });
               if (error){ msg.textContent = rpcError(error); draw(); return; }
               if (movingId === b.id) movingId = null;
-              $("#status").textContent = "Aula desmarcada. Você pode marcar outra."; load();
+              $("#status").textContent = "Aula desmarcada. Você vai receber um e-mail. Pode marcar outra quando quiser."; notify(); load();
             } }, "Sim, desmarcar"),
             h("button", { type: "button", class: "btn", onclick: draw }, "Voltar"));
         } }, "Desmarcar"));
@@ -87,9 +87,11 @@ async function confirm(){
     : await supabase.rpc("book_class", { p_starts_at: t });
   pending = null;
   if (error){ $("#status").textContent = rpcError(error); load(); return; }
-  $("#status").textContent = (movingId ? "Aula remarcada: " : "Aula marcada: ") + fmtSlot(t);
-  movingId = null; load();
+  $("#status").textContent = (movingId ? "Aula remarcada: " : "Aula marcada: ") + fmtSlot(t) + ". Você vai receber a confirmação por e-mail.";
+  movingId = null; notify(); load();
 }
+// Sends the e-mail and the Google Calendar update. If it fails now, the next call sends what is pending.
+const notify = () => callChat({ action: "agenda" }).catch(() => {});
 async function join(id, msg){
   msg.textContent = "Abrindo a aula…";
   const { data, error } = await supabase.rpc("join_class", { p_id: id });

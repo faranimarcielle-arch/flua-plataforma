@@ -1,10 +1,15 @@
-import { supabase, requireLogin, renderNav, $, h, fmtSlot, rpcError } from "../lib.js";
+import { supabase, callChat, requireLogin, renderNav, $, h, fmtSlot, rpcError } from "../lib.js";
 const login = await requireLogin();
 if (!login) throw new Error("redirecting");
 renderNav("professor", login.profile);
 if (!login.profile || login.profile.role !== "teacher"){ $("#denied").hidden = false; throw new Error("not teacher"); }
 $("#students-card").hidden = false;
 $("#agenda-card").hidden = false;
+// Also sends any pending class notice (Google Calendar + e-mail) and shows whether Google is connected.
+callChat({ action: "agenda" }).then(r => { $("#gcal-status").textContent = r && r.google
+  ? "Google Agenda e e-mails: conectados." + (r.sent ? ` ${r.sent} aviso(s) enviado(s) agora.` : "")
+  : "Google Agenda e e-mails: ainda não configurados (faltam as chaves do Google no Supabase)."; })
+  .catch(e => { $("#gcal-status").textContent = "Google Agenda: " + (e.msg || "erro ao conectar."); });
 
 const fmt = iso => new Date(iso).toLocaleString("pt-BR", { dateStyle:"short", timeStyle:"short" });
 let current = null;
