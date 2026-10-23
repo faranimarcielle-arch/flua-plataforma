@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; base-uri 'none'; form-action 'none'">
+<title>FLUA</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,700&display=swap">
+<style>
+:root{--bg:#F7F2EB;--surface:#FFFFFF;--ink:#17245F;--muted:#646A8A;--accent:#F15A22;--accent-ink:#FFFFFF;--line:#ECE3D8}
+@media (prefers-color-scheme: dark){:root{--bg:#0D1230;--surface:#161D45;--ink:#F5F1EA;--muted:#A5ABCB;--accent:#FF7440;--accent-ink:#1B0C04;--line:#2A3366;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Nunito Sans",system-ui,sans-serif;padding:32px 16px}
+main{max-width:560px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.logo{font-family:"Nunito",system-ui,sans-serif;font-weight:900;font-size:2.2rem;display:inline-flex}
+.logo-a{position:relative}
+.logo-a::after{content:"";position:absolute;left:-3px;right:-10px;bottom:-6px;height:12px;border-bottom:5px solid var(--accent);border-radius:0 0 60% 60%}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px}
+h1{font-family:"Nunito",system-ui,sans-serif;font-weight:900;margin:0;font-size:1.5rem}
+p{margin:0;color:var(--muted)}
+a.btn{align-self:flex-start;background:var(--accent);color:var(--accent-ink);text-decoration:none;font-weight:700;border-radius:12px;padding:10px 16px}
+</style>
+</head>
+<body>
+<main>
+  <span class="logo" role="img" aria-label="FLUA">FLU<span class="logo-a">A</span></span>
+  <div class="card">
+    <h1>Conversa por voz</h1>
+    <p>Fale em inglês com o Max, o parceiro de conversa da FLUA. Versão de teste.</p>
+    <a class="btn" href="conversa/">Abrir a conversa</a>
+  </div>
+</main>
+</body>
+</html>
