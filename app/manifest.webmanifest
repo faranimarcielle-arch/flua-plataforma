@@ -1,0 +1,17 @@
+{
+  "name": "FLUA English",
+  "short_name": "FLUA",
+  "description": "Pratique inglês com a FLUA: conversa por voz, agenda de aulas e mais.",
+  "lang": "pt-BR",
+  "start_url": "./inicio/",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F2EB",
+  "theme_color": "#17245F",
+  "icons": [
+    { "src": "../img/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "../img/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "../img/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

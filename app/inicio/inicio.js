@@ -42,3 +42,23 @@ for (let d = 1; d <= new Date(y, m + 1, 0).getDate(); d++){
   const key = `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
   cal.append(h("span", { class: "d" + (key === today ? " today" : "") + (booked.has(key) ? " booked" : "") }, d));
 }
+
+// "Install the app": Android/desktop Chrome offer a prompt; iPhone needs the Share menu.
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+if (!standalone){
+  const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  if (isIOS){
+    $("#install-text").textContent = "No iPhone: abra este site no Safari, toque em Compartilhar (o quadrado com a seta) e depois em \"Adicionar à Tela de Início\".";
+    $("#install-card").hidden = false;
+  }
+  let deferred = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault(); deferred = e;
+    $("#install-card").hidden = false; $("#install-btn").hidden = false;
+  });
+  $("#install-btn").addEventListener("click", async () => {
+    if (!deferred) return;
+    deferred.prompt(); await deferred.userChoice; deferred = null;
+    $("#install-card").hidden = true;
+  });
+}

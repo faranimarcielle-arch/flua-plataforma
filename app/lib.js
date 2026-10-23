@@ -8,6 +8,9 @@ export const APP = new URL("./", import.meta.url).href;   // .../app/
 // Name of the server function in Supabase (the dashboard editor named it automatically).
 export const CHAT_FUNCTION = "bright-function";
 
+// Installable app (PWA): register the service worker for every page under app/.
+if ("serviceWorker" in navigator) navigator.serviceWorker.register(APP + "sw.js").catch(() => {});
+
 export const $ = (s) => document.querySelector(s);
 export function h(tag, attrs, ...kids){
   const el = document.createElement(tag);
