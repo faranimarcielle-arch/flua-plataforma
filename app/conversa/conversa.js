@@ -12,7 +12,15 @@ $("#support").textContent = (SR ? "" : "Este navegador não reconhece voz: use o
   "Para usar fone de ouvido, escolha-o como microfone e saída de som antes de começar. Sua voz fica gravada para o professor poder ouvir.";
 
 let voice = null;
-function pickVoice(){ if (!canSpeak) return; const vs = speechSynthesis.getVoices(); voice = vs.find(v => /en-US/i.test(v.lang) && /natural|online|google|aria|jenny|samantha/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang)) || null; }
+// Flo has a female voice: known female US voices first (natural ones before the rest), never a known male one.
+const FEMALE = /jenny|aria|ava|emma|michelle|samantha|allison|susan|zira|google us english|female/i;
+const MALE = /guy|christopher|eric|roger|steffan|andrew|brian|david|mark|alex\b|fred|daniel|tom\b|male/i;
+function pickVoice(){
+  if (!canSpeak) return;
+  const us = speechSynthesis.getVoices().filter(v => /^en[-_]US/i.test(v.lang));
+  const female = us.filter(v => FEMALE.test(v.name) && !/\bmale/i.test(v.name.replace(/female/i, "")));
+  voice = female.find(v => /natural|online|neural/i.test(v.name)) || female[0] || us.find(v => !MALE.test(v.name)) || null;
+}
 if (canSpeak){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 function speak(text, done){
   if (!canSpeak || !text){ done && done(); return; }
