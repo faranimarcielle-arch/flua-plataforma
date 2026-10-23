@@ -3,7 +3,13 @@
 import Anthropic from "npm:@anthropic-ai/sdk@0.137.0";
 import { createClient, type SupabaseClient } from "npm:@supabase/supabase-js@2.117.3";
 
-const ALLOWED_ORIGINS = ["https://faranimarcielle-arch.github.io"];
+const ALLOWED_ORIGINS = [
+  "https://app.fluaenglish.com.br",
+  "https://fluaenglish.com.br",
+  "https://www.fluaenglish.com.br",
+  "https://flua-plataforma.pages.dev",
+  "https://faranimarcielle-arch.github.io", // old address, kept during the move
+];
 const MODEL = "claude-haiku-5-5";
 const PRICE = { input: 0.10, output: 0.50 }; // US$ per million tokens, claude-haiku-5-5
 const MAX_TURNS = 60;
