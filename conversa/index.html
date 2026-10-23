@@ -6,6 +6,8 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.anthropic.com; img-src 'self' data:; base-uri 'none'; form-action 'none'">
 <meta name="referrer" content="no-referrer">
 <title>FLUA · Conversa por voz</title>
+<link rel="icon" type="image/png" href="../img/favicon.png">
+<link rel="apple-touch-icon" href="../img/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
@@ -88,7 +90,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--ink)}
 <body>
 <main>
   <div class="top">
-    <span class="logo" role="img" aria-label="FLUA">FLU<span class="logo-a">A</span></span>
+    <picture class="brand"><source srcset="../img/flua-logo-branco.webp" media="(prefers-color-scheme: dark)"><img src="../img/flua-logo.webp" alt="FLUA" style="height:40px;width:auto;display:block"></picture>
     <button class="icon-btn" id="open-settings" type="button">Configurações</button>
   </div>
 

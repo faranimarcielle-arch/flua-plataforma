@@ -36,7 +36,7 @@ button{cursor:pointer;color:inherit}
 .btn:disabled{opacity:.5;cursor:default}
 .icon-btn{border:1px solid var(--line);background:var(--surface-2);color:var(--ink);border-radius:999px;padding:5px 11px;font-size:.8rem;font-weight:700;text-decoration:none}
 label.f{display:flex;flex-direction:column;gap:6px;font-weight:700;font-size:.9rem;color:var(--ink)}
-input[type=text],input[type=email],input[type=number],select,textarea{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:10px 12px;font-weight:400;min-width:0}
+input[type=text],input[type=email],input[type=password],input[type=number],select,textarea{border:1px solid var(--line);background:var(--surface);color:var(--text);border-radius:12px;padding:10px 12px;font-weight:400;min-width:0}
 .toggle{display:inline-flex;gap:8px;align-items:center;font-weight:700;font-size:.92rem;color:var(--ink)}
 .toggle input{width:18px;height:18px;accent-color:var(--accent)}
 .warn{background:var(--warn-soft);border-radius:12px;padding:10px 12px;font-size:.88rem}
