@@ -14,14 +14,15 @@
   <span class="logo" role="img" aria-label="FLUA">FLU<span class="logo-a">A</span></span>
   <div class="card">
     <h1>Entrar</h1>
-    <p class="muted">Digite o e-mail cadastrado na FLUA. Você recebe um link de acesso, sem senha.</p>
+    <p class="muted">Use o e-mail e a senha que a FLUA te passou.</p>
     <form id="form" class="row" style="flex-direction:column;align-items:stretch" novalidate>
       <label class="f" for="email">E-mail<input type="email" id="email" autocomplete="email" required maxlength="120"></label>
-      <button class="btn primary" type="submit" id="send" style="align-self:flex-start">Receber link de acesso</button>
+      <label class="f" for="password">Senha<input type="password" id="password" autocomplete="current-password" required maxlength="72"></label>
+      <button class="btn primary" type="submit" id="send" style="align-self:flex-start">Entrar</button>
     </form>
     <p class="status" id="status" role="status"></p>
   </div>
-  <p class="small muted">Ainda não tem acesso? Fale com a FLUA pelo <a href="https://wa.me/5521996993031" target="_blank" rel="noopener">WhatsApp</a>.</p>
+  <p class="small muted">Ainda não tem acesso ou esqueceu a senha? Fale com a FLUA pelo <a href="https://wa.me/5521996993031" target="_blank" rel="noopener">WhatsApp</a>.</p>
 </main>
 <script type="module" src="entrar.js"></script>
 </body>
