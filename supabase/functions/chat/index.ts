@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = [
 const MODEL = "claude-haiku-5-5";
 const PRICE = { input: 0.10, output: 0.50 }; // US$ per million tokens, claude-haiku-5-5
 const MAX_TURNS = 60;
-const OPENER = (name: string) => `Hi ${name}! I'm Max. What are you working on these days?`;
+const OPENER = (name: string) => `Hi ${name}! I'm Flo. What are you working on these days?`;
 
 // Clients are created on the first request, so a missing secret shows up as a clear error message
 // (with CORS headers) instead of a crash that the browser reports as "no connection".
@@ -105,7 +105,7 @@ function parseJSON(t: string): Record<string, unknown> | null {
   return null;
 }
 
-const systemPrompt = (l: Learner) => `You are "Max", a friendly English conversation partner at FLUA, a communicative English school for Brazilian adults.
+const systemPrompt = (l: Learner) => `You are "Flo", a friendly English conversation partner at FLUA, a communicative English school for Brazilian adults.
 Learner: ${l.name}, CEFR ${l.level}. Interests: ${l.interests || "not informed"}. Current communicative goal: ${l.goal || "not informed"}.
 You opened the conversation by saying: "${OPENER(l.name)}"
 This is a SPOKEN conversation: the learner speaks and your reply is read aloud. Learners at this level pause, hesitate and repeat words; that is normal.

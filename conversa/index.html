@@ -96,7 +96,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--ink)}
 
   <div>
     <h1>Conversa por voz</h1>
-    <p class="muted">Toque no microfone e fale em inglês no seu ritmo: pode pausar e pensar. Quando terminar, toque de novo para enviar. O Max responde por voz e por escrito.</p>
+    <p class="muted">Toque no microfone e fale em inglês no seu ritmo: pode pausar e pensar. Quando terminar, toque de novo para enviar. Flo responde por voz e por escrito.</p>
   </div>
 
   <div class="card" id="settings">
@@ -114,7 +114,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--ink)}
           <option value="claude-opus-5-5">Opus 5.5 · mais avançado</option>
         </select>
       </label>
-      <label class="f" for="voice">Voz do Max
+      <label class="f" for="voice">Voz da Flo
         <select id="voice"></select>
       </label>
       <label class="f" for="name">Nome do aluno<input type="text" id="name" maxlength="40" value="Willian"></label>
@@ -128,7 +128,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--ink)}
       <label class="f" for="rate">Velocidade da voz
         <select id="rate"><option value="0.8">Devagar</option><option value="0.95" selected>Normal</option><option value="1.1">Rápida</option></select>
       </label>
-      <label class="toggle" style="align-self:end"><input type="checkbox" id="handsfree"> Começar a gravar sozinho depois que o Max responder (o envio continua sendo no seu toque)</label>
+      <label class="toggle" style="align-self:end"><input type="checkbox" id="handsfree"> Começar a gravar sozinho depois que Flo responder (o envio continua sendo no seu toque)</label>
     </div>
     <div class="row">
       <button class="btn primary" id="save-settings" type="button">Salvar e começar</button>
@@ -269,7 +269,7 @@ function parseJSON(t){
 const MAX_MESSAGES = 60;
 let history = [];   // full API messages; assistant turns keep every content block, unchanged
 let mine = [];      // learner sentences, for the review
-const systemPrompt = () => `You are "Max", a friendly English conversation partner at FLUA, a communicative English school for Brazilian adults.
+const systemPrompt = () => `You are "Flo", a friendly English conversation partner at FLUA, a communicative English school for Brazilian adults.
 Learner: ${S.name}, CEFR ${S.level}. Interests: ${S.interests}. Current communicative goal: ${S.goal}.
 This is a SPOKEN conversation: the learner speaks and your reply is read aloud. Learners at this level pause, hesitate and repeat words; that is normal.
 It is free conversation: do NOT correct mistakes now (they are reviewed at the end). If you really can't understand, ask for clarification naturally, like a person would.
@@ -288,10 +288,10 @@ function setState(kind, text){
 function startConversation(){
   history = []; mine = []; spent = 0; $("#cost").textContent = "";
   $("#chat").replaceChildren(); $("#review").hidden = true; $("#finish").disabled = true;
-  const opener = `Hi ${S.name}! I'm Max. What are you working on these days?`;
+  const opener = `Hi ${S.name}! I'm Flo. What are you working on these days?`;
   // The opener is shown and spoken; the API conversation starts with the learner's first message.
   history.push({ role:"user", content:"(The learner opened the conversation screen.)" }, { role:"assistant", content:[{ type:"text", text:opener }] });
-  addBubble("Max", opener, "ai");
+  addBubble("Flo", opener, "ai");
   setState("idle", "Toque no microfone e fale");
   speak(opener);
 }
@@ -303,13 +303,13 @@ async function sendLearner(text){
   addBubble("Você", text, "me"); mine.push(text);
   history.push({ role:"user", content:text });
   $("#finish").disabled = mine.length < 2;
-  setState("thinking", "Max está pensando…"); $("#status").textContent = "";
+  setState("thinking", "Flo está pensando…"); $("#status").textContent = "";
   try{
     const r = await callClaude({ system:systemPrompt(), messages:history });
     history.push({ role:"assistant", content:r.content });
     const reply = r.text || "Sorry, could you say that again?";
-    addBubble("Max", reply, "ai");
-    setState("speaking", "Max está falando…");
+    addBubble("Flo", reply, "ai");
+    setState("speaking", "Flo está falando…");
     speak(reply, () => {
       if ($("#handsfree").checked && !reviewing) startRecording(); else setState("idle", "Toque no microfone e fale");
     });

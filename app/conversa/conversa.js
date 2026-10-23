@@ -36,7 +36,7 @@ function setState(kind, text){
 const IDLE = "Toque no microfone e fale";
 async function start(){
   conversationId = null; turns = 0; $("#chat").replaceChildren(); $("#review").hidden = true; $("#finish").disabled = true;
-  try{ const r = await callChat({ action:"start" }); addBubble("Max", r.opener, "ai"); speak(r.opener); setState("idle", IDLE); }
+  try{ const r = await callChat({ action:"start" }); addBubble("Flo", r.opener, "ai"); speak(r.opener); setState("idle", IDLE); }
   catch(e){ setState("idle", IDLE); $("#status").replaceChildren(h("span", {class:"err"}, e.msg)); }
 }
 $("#restart").addEventListener("click", () => { stopAll(); start(); });
@@ -53,14 +53,14 @@ async function sendLearner(text, blob){
   busy = true;
   const mine = addBubble("Você", text, "me");
   if (blob && blob.size) mine.append(h("audio", {controls:true, src:URL.createObjectURL(blob), preload:"none"}));
-  setState("thinking", "Max está pensando…"); $("#status").textContent = "";
+  setState("thinking", "Flo está pensando…"); $("#status").textContent = "";
   try{
     const audio_path = await uploadAudio(blob);
     const r = await callChat({ action:"reply", conversation_id:conversationId, text, audio_path });
     conversationId = r.conversation_id; turns++;
     $("#finish").disabled = turns < 2;
-    addBubble("Max", r.reply, "ai");
-    setState("speaking", "Max está falando…");
+    addBubble("Flo", r.reply, "ai");
+    setState("speaking", "Flo está falando…");
     speak(r.reply, () => setState("idle", IDLE));
   }catch(e){
     mine.remove();

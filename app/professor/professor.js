@@ -66,7 +66,7 @@ async function loadConversations(id){
       const { data: msgs } = await supabase.from("messages").select("role, text, audio_path, created_at").eq("conversation_id", c.id).order("id");
       const chat = h("div", {class:"chat", style:"margin-top:10px"});
       for (const m of msgs || []){
-        const b = h("div", {class:"msg " + (m.role === "user" ? "me" : "ai")}, h("span", {class:"who"}, m.role === "user" ? "Aluno" : "Max"), m.text);
+        const b = h("div", {class:"msg " + (m.role === "user" ? "me" : "ai")}, h("span", {class:"who"}, m.role === "user" ? "Aluno" : "Flo"), m.text);
         if (m.audio_path){
           const { data: signed } = await supabase.storage.from("audios").createSignedUrl(m.audio_path, 600);
           if (signed) b.append(h("audio", {controls:true, preload:"none", src:signed.signedUrl}));
