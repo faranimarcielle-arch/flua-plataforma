@@ -4,7 +4,7 @@ Plataforma da FLUA para alunos adultos: prática comunicativa, conversa por voz 
 
 ## O que já existe
 
-- `conversa/`: página de teste da **conversa por voz** com o Max.
+- `conversa/`: página de teste da **conversa por voz** com o Max. Funciona no modo "aperta para falar, aperta de novo para enviar": o aluno pode pausar e pensar sem ser interrompido.
   - O aluno toca no microfone, fala em inglês e vê o texto do que falou.
   - O Max responde em texto e em voz e volta a ouvir sozinho.
   - Durante a conversa não há correção. No fim, até 3 pontos, cada um com pista, nova tentativa falada e modelo.
