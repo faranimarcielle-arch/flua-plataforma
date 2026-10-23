@@ -5,6 +5,8 @@ export const SUPABASE_URL = "https://spwcyhjqdxasgloujbyz.supabase.co";
 export const SUPABASE_KEY = "sb_publishable_GVxTpJOWXYXEyeOsMOSMLg_7ZJX8FmA";
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 export const APP = new URL("./", import.meta.url).href;   // .../app/
+// Name of the server function in Supabase (the dashboard editor named it automatically).
+export const CHAT_FUNCTION = "bright-function";
 
 export const $ = (s) => document.querySelector(s);
 export function h(tag, attrs, ...kids){
@@ -28,7 +30,7 @@ export async function requireLogin(){
 
 // Calls the server function that talks to the AI. Throws { msg } with a message for the student.
 export async function callChat(body){
-  const { data, error } = await supabase.functions.invoke("chat", { body });
+  const { data, error } = await supabase.functions.invoke(CHAT_FUNCTION, { body });
   if (error){
     let msg = "Não deu certo agora. Tente de novo em instantes.";
     try{ const j = await error.context.json(); if (j && j.error) msg = j.error; }catch(e){}
