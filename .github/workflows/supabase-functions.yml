@@ -1,12 +1,8 @@
 name: Publicar funções no Supabase
 
+# Manual for now: the function is deployed from the Supabase dashboard editor.
+# To automate later, add the SUPABASE_ACCESS_TOKEN secret and restore the push trigger.
 on:
-  push:
-    branches: [main]
-    paths:
-      - "supabase/functions/**"
-      - "supabase/config.toml"
-      - ".github/workflows/supabase-functions.yml"
   workflow_dispatch:
 
 permissions:
