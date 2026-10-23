@@ -1,8 +1,8 @@
 // Shared helpers for the FLUA app. The publishable key is meant to be public: access is enforced by row level security.
 import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/+esm";
 
-export const SUPABASE_URL = "https://ytbjwpmqirrfbonlywyq.supabase.co";
-export const SUPABASE_KEY = "sb_publishable__PaFlft15PZPb_9sXiM3ug_BBphvrpW";
+export const SUPABASE_URL = "https://spwcyhjqdxasgloujbyz.supabase.co";
+export const SUPABASE_KEY = "sb_publishable_GVxTpJOWXYXEyeOsMOSMLg_7ZJX8FmA";
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 export const APP = new URL("./", import.meta.url).href;   // .../app/
 
