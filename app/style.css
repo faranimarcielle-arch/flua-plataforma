@@ -99,7 +99,7 @@ details summary{cursor:pointer;font-weight:800;color:var(--ink)}
 .slot:hover:not(:disabled){background:var(--accent-soft)}
 .slot.mine{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .slot.taken{background:var(--surface-2);color:var(--muted);text-decoration:line-through;border-color:transparent}
-.slot.limit{background:var(--surface-2);color:var(--muted);border-style:dashed}
+.slot.limit,.slot.day{background:var(--surface-2);color:var(--muted);border-style:dashed}
 .slot:disabled{cursor:default}
 .slot.sel{outline:3px solid var(--accent);outline-offset:2px}
 .confirm{background:var(--accent-soft);border-radius:12px;padding:10px 12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}

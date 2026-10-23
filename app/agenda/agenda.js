@@ -5,8 +5,8 @@ renderNav("agenda", login.profile);
 
 let mine = [], slots = [], movingId = null, pending = null;
 const { data: me } = await supabase.rpc("my_profile");
-const perWeek = me && me[0] ? me[0].classes_per_week : null;
-if (perWeek) $("#plan").textContent = `Plano: ${perWeek} ${perWeek === 1 ? "aula" : "aulas"} por semana`;
+const perWeek = me && me[0] ? me[0].classes_per_week : null, perDay = me && me[0] ? me[0].classes_per_day : null;
+if (perWeek) $("#plan").textContent = `Plano: ${perWeek} ${perWeek === 1 ? "aula" : "aulas"} por semana` + (perDay ? ` · ${perDay} por dia` : "");
 
 async function load(){
   const [b, s] = await Promise.all([
@@ -60,12 +60,13 @@ function render(){
   for (const [k, list] of byDay){
     const times = h("div", { class: "times" });
     list.forEach(s => {
-      // While rescheduling, the class being moved does not count toward the weekly limit.
+      // While rescheduling, the class being moved does not count toward the daily or weekly limit.
       let state = s.state;
-      if (moving && state === "limit" && dayKey(s.starts_at) && sameWeek(s.starts_at, moving.starts_at)) state = "free";
+      if (moving && state === "day" && dayKey(s.starts_at) === dayKey(moving.starts_at)) state = "free";
+      if (moving && state === "limit" && sameWeek(s.starts_at, moving.starts_at)) state = "free";
       const label = new Date(s.starts_at).toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
       times.append(h("button", { type: "button", class: `slot ${state === "free" ? "" : state}${pending === s.starts_at ? " sel" : ""}`, disabled: state !== "free",
-        "aria-label": fmtSlot(s.starts_at) + (state === "free" ? "" : " · " + ({ mine: "sua aula", taken: "ocupado", limit: "limite do plano" })[state]),
+        "aria-label": fmtSlot(s.starts_at) + (state === "free" ? "" : " · " + ({ mine: "sua aula", taken: "ocupado", day: "já tem aula nesse dia", limit: "limite da semana" })[state]),
         onclick: () => { pending = s.starts_at; $("#status").textContent = ""; render(); } }, label));
     });
     const day = h("div", { class: "day" }, h("h3", null, fmtDay(list[0].starts_at)), times);
