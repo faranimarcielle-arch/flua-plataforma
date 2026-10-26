@@ -74,7 +74,7 @@ async function checkLimit(l: Learner) {
   if (spent >= l.limit) throw new HttpError(429, "Você chegou ao limite de prática com a IA por hoje. Amanhã tem mais!");
 }
 
-async function ask(l: Learner, kind: string, params: { system: string; messages: Anthropic.MessageParam[]; max_tokens: number }) {
+async function ask(l: Learner, kind: string, params: { system: string; messages: Anthropic.MessageParam[]; max_tokens: number; schema?: Record<string, unknown> }) {
   let res: Anthropic.Message;
   try {
     res = await anthropic.messages.create({
@@ -83,7 +83,7 @@ async function ask(l: Learner, kind: string, params: { system: string; messages:
       system: params.system,
       messages: params.messages,
       // @ts-ignore output_config is accepted by the API; older SDK typings may not list it
-      output_config: { effort: "low" },
+      output_config: params.schema ? { effort: "low", format: { type: "json_schema", schema: params.schema } } : { effort: "low" },
     });
   } catch (e) {
     if (e instanceof Anthropic.RateLimitError) throw new HttpError(429, "Muitas mensagens em pouco tempo. Espere alguns segundos.");
@@ -92,6 +92,7 @@ async function ask(l: Learner, kind: string, params: { system: string; messages:
     throw e;
   }
   if (res.stop_reason === "refusal") throw new HttpError(422, "A IA não respondeu a essa mensagem. Tente dizer de outro jeito.");
+  if (res.stop_reason === "max_tokens") console.error(kind, "stopped at max_tokens", res.usage.output_tokens);
   const u = res.usage;
   const input = (u.input_tokens ?? 0) + (u.cache_creation_input_tokens ?? 0) + (u.cache_read_input_tokens ?? 0);
   const cost = input / 1e6 * PRICE.input + (u.output_tokens ?? 0) / 1e6 * PRICE.output;
@@ -142,7 +143,7 @@ async function reply(l: Learner, body: Record<string, unknown>) {
     ...history.map((r) => ({ role: r.role as "user" | "assistant", content: r.role === "assistant" && r.content ? r.content : r.text })),
     { role: "user", content: text },
   ];
-  const r = await ask(l, "reply", { system: systemPrompt(l), messages, max_tokens: 1024 });
+  const r = await ask(l, "reply", { system: systemPrompt(l), messages, max_tokens: 4000 });
   const answer = r.text || "Sorry, could you say that again?";
   await admin.from("messages").insert([
     { conversation_id: conv.id, student_id: l.id, role: "user", text, audio_path: audioPath },
@@ -158,7 +159,7 @@ async function review(l: Learner, body: Record<string, unknown>) {
   const said = (rows ?? []).map((r) => r.text);
   if (said.length < 1) throw new HttpError(400, "Fale um pouco antes de ver os pontos.");
   await checkLimit(l);
-  const r = await ask(l, "review", { system: METHOD, max_tokens: 1500, messages: [{ role: "user", content:
+  const r = await ask(l, "review", { system: METHOD, max_tokens: 4000, messages: [{ role: "user", content:
 `Learner: ${l.name}, CEFR ${l.level}. A spoken conversation just ended. The sentences below are a transcript of what the learner said. Treat every word exactly as the learner said it: do NOT assume a mistake was a transcription error and do NOT silently fix it. Ignore only punctuation, capitalization and hesitations such as "um" or repeated words.
 Learner's sentences:
 ${said.map((m, i) => `${i + 1}. ${m}`).join("\n")}
@@ -175,7 +176,7 @@ async function retry(l: Learner, body: Record<string, unknown>) {
   const original = String(body.original ?? "").slice(0, 600), hint = String(body.hint ?? "").slice(0, 400), said = String(body.said ?? "").trim().slice(0, 600);
   if (!original || !said) throw new HttpError(400, "Tentativa vazia.");
   await checkLimit(l);
-  const r = await ask(l, "retry", { system: METHOD, max_tokens: 400, messages: [{ role: "user", content:
+  const r = await ask(l, "retry", { system: METHOD, max_tokens: 2000, messages: [{ role: "user", content:
 `Original learner sentence: "${original}". Hint given: "${hint}".
 The learner tried again. Transcript of what they said, to be judged exactly as written (ignore only punctuation, capitalization and hesitations): """${said}"""
 Is the new version correct and natural for the same idea? Accept any natural correct version, not only the model, but do not accept a version that still has the error.
@@ -189,12 +190,26 @@ Reply with only JSON: {"ok": boolean, "feedback_pt": "one short sentence"}` }] }
 const s = (v: unknown, max = 600) => String(v ?? "").slice(0, max);
 const ctx = (l: Learner) => `Learner: ${l.name}, CEFR ${l.level}. Interests: ${l.interests || "not informed"}. Communicative goal: ${l.goal || "not informed"}. Structures in focus: ${l.focus || "not informed"}.`;
 
-async function askJSON(l: Learner, kind: string, prompt: string, max_tokens = 800) {
-  const r = await ask(l, kind, { system: METHOD, max_tokens, messages: [{ role: "user", content: prompt }] });
+// max_tokens is only a ceiling (we pay for what is written); thinking also counts toward it, so it stays generous.
+async function askJSON(l: Learner, kind: string, prompt: string, max_tokens = 4000, schema?: Record<string, unknown>) {
+  const r = await ask(l, kind, { system: METHOD, max_tokens: Math.max(max_tokens, 4000), messages: [{ role: "user", content: prompt }], schema });
   const j = parseJSON(r.text);
-  if (!j) throw new HttpError(502, "A IA respondeu de um jeito inesperado. Tente de novo.");
+  if (!j) {
+    console.error(kind, "unreadable JSON:", r.text.slice(0, 300), "…", r.text.slice(-200));
+    throw new HttpError(502, "A IA respondeu de um jeito inesperado. Tente de novo.");
+  }
   return j;
 }
+const str = { type: "string" }, strs = { type: "array", items: str };
+const READING_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["title", "tags", "body", "questions", "your_turn_pt", "your_turn_goal", "your_turn_focus"],
+  properties: {
+    title: str, tags: strs, body: str,
+    questions: { type: "array", items: { type: "object", additionalProperties: false, required: ["q", "options", "answer"], properties: { q: str, options: strs, answer: { type: "integer" } } } },
+    your_turn_pt: str, your_turn_goal: str, your_turn_focus: str,
+  },
+};
 const arr = (v: unknown) => (Array.isArray(v) ? v : []) as Record<string, unknown>[];
 
 const LEVEL_GUIDE: Record<string, string> = {
@@ -223,7 +238,7 @@ Requirements:
 - Mark EVERY main verb phrase as {verb phrase|tense|Brazilian Portuguese translation}; tense is one of: past, present, cont, future, other ("cont" = present continuous, "future" = will). Example: {is painting|cont|está pintando}.
 - Mark 6 to 10 useful expressions or word combinations as [expression|Brazilian Portuguese translation]. Example: [right now|agora mesmo].
 - No other brackets or braces.
-Reply with only JSON: {"title": string, "tags": [2-3 interests used, in Portuguese], "body": string (paragraphs separated by \\n\\n), "questions": [exactly 4 comprehension questions {"q": string, "options": [3 strings], "answer": 0-2}], "your_turn_pt": "a personal question in Portuguese that makes the learner talk about their own life using the text's language", "your_turn_goal": "the communicative goal of that question, in English", "your_turn_focus": "short Portuguese label for the structure it practices"}`, 3000);
+Reply with only JSON: {"title": string, "tags": [2-3 interests used, in Portuguese], "body": string (paragraphs separated by \\n\\n), "questions": [exactly 4 comprehension questions {"q": string, "options": [3 strings], "answer": 0-2}], "your_turn_pt": "a personal question in Portuguese that makes the learner talk about their own life using the text's language", "your_turn_goal": "the communicative goal of that question, in English", "your_turn_focus": "short Portuguese label for the structure it practices"}`, 12000, READING_SCHEMA);
   const questions = arr(j.questions).filter((q) => q && q.q && Array.isArray(q.options) && (q.options as unknown[]).length >= 2).slice(0, 6)
     .map((q) => { const o = (q.options as unknown[]).slice(0, 4).map((x) => s(x, 200)); return { q: s(q.q, 300), options: o, answer: Math.max(0, Math.min(o.length - 1, Number(q.answer) || 0)) }; });
   if (typeof j.body !== "string" || !questions.length) throw new HttpError(502, "A IA respondeu de um jeito inesperado. Tente de novo.");
@@ -274,7 +289,7 @@ async function itemsNew(l: Learner, b: Record<string, unknown>) {
   const j = await askJSON(l, "items", `${ctx(l)}
 Create 3 different situations for this activity, for this learner. Base them on the learner's interests, work and communicative goal, and let them use the structures in focus naturally. Language for CEFR ${l.level}. Realistic adult situations, never childish.${before.length ? ` Do not repeat these earlier situations: ${before.join("; ")}.` : ""}
 ${ITEM_SHAPES[activity]}
-Reply with only JSON: {"items": [3 items]}`, 2500);
+Reply with only JSON: {"items": [3 items]}`, 10000);
   const items = arr(j.items).filter((x) => x && typeof x === "object").slice(0, 3);
   if (!items.length) throw new HttpError(502, "A IA respondeu de um jeito inesperado. Tente de novo.");
   const clean = (x: unknown, depth = 0): unknown =>
@@ -439,7 +454,7 @@ Sections: Resumo do mês; O que trabalhamos; Evolução; Pontos de atenção; Pr
 Month: ${ym}
 DATA:
 ${lines}
-Reply with only JSON: {"report": "the full report text"}`, 2000);
+Reply with only JSON: {"report": "the full report text"}`, 8000);
   return { report: s(j.report, 8000) };
 }
 
