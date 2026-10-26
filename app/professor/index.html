@@ -40,28 +40,110 @@
 
   <div class="card" id="students-card" hidden>
     <h2>Alunos</h2>
-    <p class="small muted">Para cadastrar um aluno: no Supabase, Authentication → Users → Add user → Send invitation, com o e-mail dele.</p>
+    <p class="small muted">Para cadastrar um aluno: no Supabase, Authentication → Users → Add user → Create new user (com "Auto Confirm" marcado).</p>
     <div id="students"></div>
   </div>
 
   <div class="card" id="student-card" hidden>
     <div class="row" style="justify-content:space-between"><h2 id="st-name"></h2><span class="small muted" id="st-cost"></span></div>
-    <div class="row" style="align-items:flex-end">
-      <label class="f" for="st-display">Nome<input type="text" id="st-display" maxlength="60"></label>
-      <label class="f" for="st-level">Nível<select id="st-level"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
-      <label class="f" for="st-week">Aulas por semana<input type="number" id="st-week" min="1" max="7" step="1"></label>
-      <label class="f" for="st-day">Aulas por dia<input type="number" id="st-day" min="1" max="4" step="1"></label>
-      <label class="f" for="st-limit">Limite de IA por dia (US$)<input type="number" id="st-limit" min="0" max="5" step="0.01"></label>
+    <div class="tabs" role="tablist" id="st-tabs">
+      <button type="button" role="tab" data-tab="perfil" aria-selected="true">Perfil</button>
+      <button type="button" role="tab" data-tab="progresso" aria-selected="false">Progresso</button>
+      <button type="button" role="tab" data-tab="aulas" aria-selected="false">Aulas</button>
+      <button type="button" role="tab" data-tab="ficha" aria-selected="false">Ficha</button>
+      <button type="button" role="tab" data-tab="relatorio" aria-selected="false">Relatório</button>
+      <button type="button" role="tab" data-tab="conversas" aria-selected="false">Conversas</button>
     </div>
-    <label class="f" for="st-interests">Interesses<input type="text" id="st-interests" maxlength="300"></label>
-    <label class="f" for="st-goal">Objetivo comunicativo<input type="text" id="st-goal" maxlength="300"></label>
-    <div class="row"><button class="btn primary" id="st-save" type="button">Salvar</button><span class="status" id="st-status" role="status"></span></div>
-    <div class="row" style="justify-content:space-between"><h2>Aulas e frequência</h2><span class="pill" id="st-rate"></span></div>
-    <p class="small muted">A presença é registrada quando o aluno toca em "Entrar na aula". Corrija quando precisar. Só você vê isto.</p>
-    <div id="st-classes"></div>
-    <h2>Conversas</h2>
-    <p class="small muted">O texto é a transcrição automática. Ouça o áudio para saber exatamente o que o aluno disse.</p>
-    <div id="convs"></div>
+
+    <section class="stack" data-tab="perfil">
+      <div class="row" style="align-items:flex-end">
+        <label class="f" for="st-display">Nome<input type="text" id="st-display" maxlength="60"></label>
+        <label class="f" for="st-level">Nível<select id="st-level"><option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option></select></label>
+        <label class="f" for="st-week">Aulas por semana<input type="number" id="st-week" min="1" max="7" step="1"></label>
+        <label class="f" for="st-day">Aulas por dia<input type="number" id="st-day" min="1" max="4" step="1"></label>
+        <label class="f" for="st-limit">Limite de IA por dia (US$)<input type="number" id="st-limit" min="0" max="5" step="0.01"></label>
+      </div>
+      <label class="f" for="st-interests">Interesses<input type="text" id="st-interests" maxlength="300"></label>
+      <label class="f" for="st-goal">Objetivo comunicativo<input type="text" id="st-goal" maxlength="300"></label>
+      <label class="f" for="st-focus">Estruturas em foco (ex.: Simple Past, Present Continuous, Perguntas)<input type="text" id="st-focus" maxlength="300"></label>
+      <div class="stack"><b class="small" style="color:var(--ink)">Atividades que o aluno vê</b><div class="row" id="st-visible"></div></div>
+      <div class="row"><button class="btn primary" id="st-save" type="button">Salvar</button><span class="status" id="st-status" role="status"></span></div>
+    </section>
+
+    <section class="stack" data-tab="progresso" hidden>
+      <div class="row" style="justify-content:space-between"><h3>Atenção</h3>
+        <label class="small">Avisar depois de <select id="st-alert-days" style="padding:4px 8px"><option>3</option><option selected>4</option><option>5</option><option>7</option></select> dias sem praticar</label></div>
+      <div class="stack" id="st-alerts"></div>
+      <h3>Grau de apoio por estrutura</h3>
+      <p class="small muted">Cada marca é uma tentativa: sozinho, com pista ou com modelo. As mais recentes ficam à direita.</p>
+      <div id="st-structs"></div>
+      <h3>Dificuldades recorrentes</h3>
+      <p class="small muted">Sugestões da IA quando o mesmo tipo de erro aparece 2 vezes ou mais. Ao confirmar, vira prática no De Volta.</p>
+      <div class="stack" id="st-sugg"></div>
+      <h3>De Volta (próximos itens)</h3>
+      <div id="st-review"></div>
+      <h3>Desafios da vida real</h3>
+      <div id="st-challenges"></div>
+      <h3>Resumo da prática</h3>
+      <div id="st-summary" class="small"></div>
+    </section>
+
+    <section class="stack" data-tab="aulas" hidden>
+      <div class="row" style="justify-content:space-between"><h3>Aulas e frequência</h3><span class="pill" id="st-rate"></span></div>
+      <p class="small muted">A presença é registrada quando o aluno toca em "Entrar na aula". Corrija quando precisar. Só você vê isto.</p>
+      <div id="st-classes"></div>
+      <h3>Registro da aula</h3>
+      <p class="small muted">Escreva o que foi trabalhado. A IA cria 2 ou 3 exercícios no De Volta do aluno para a semana.</p>
+      <label class="f" for="log-class">Aula<select id="log-class"></select></label>
+      <label class="f" for="log-text">O que trabalhamos<textarea id="log-text" rows="3" maxlength="800" placeholder="Ex.: Simple Past com verbos irregulares, contando o fim de semana; expressões 'by the way' e 'anyway'."></textarea></label>
+      <div class="row"><button class="btn primary" id="log-save" type="button">Salvar registro</button><span class="status" id="log-status" role="status"></span></div>
+      <div id="log-list"></div>
+    </section>
+
+    <section class="stack" data-tab="ficha" hidden>
+      <h3>Observações</h3>
+      <label class="f" for="obs-text">Nova observação (só você vê)<textarea id="obs-text" rows="2" maxlength="2000"></textarea></label>
+      <div class="row"><button class="btn" id="obs-add" type="button">Salvar observação</button></div>
+      <div id="obs-list"></div>
+      <h3>Planejamento</h3>
+      <div class="row" style="align-items:flex-end"><label class="f" for="plan-date">Aula de<input type="date" id="plan-date"></label></div>
+      <label class="f" for="plan-text">O que fazer nessa aula<textarea id="plan-text" rows="3" maxlength="2000"></textarea></label>
+      <div class="row"><button class="btn" id="plan-add" type="button">Salvar planejamento</button></div>
+      <div id="plan-list"></div>
+      <h3>Avaliações</h3>
+      <div class="row" style="align-items:flex-end">
+        <label class="f" for="ev-title">Nome da avaliação<input type="text" id="ev-title" maxlength="80" placeholder="Ex.: Avaliação de outubro"></label>
+        <label class="f" for="ev-date">Data<input type="date" id="ev-date"></label>
+      </div>
+      <div class="row" id="ev-skills"></div>
+      <label class="f" for="ev-note">Comentário<textarea id="ev-note" rows="2" maxlength="2000"></textarea></label>
+      <div class="row"><button class="btn" id="ev-add" type="button">Salvar avaliação</button><span class="status" id="ficha-status" role="status"></span></div>
+      <div id="ev-list"></div>
+    </section>
+
+    <section class="stack" data-tab="relatorio" hidden>
+      <p class="small muted">Rascunho escrito pela IA só com os dados registrados. Revise e edite antes de enviar.</p>
+      <div class="row" style="align-items:flex-end">
+        <label class="f" for="rep-month">Mês<input type="month" id="rep-month"></label>
+        <label class="f" for="rep-to">Para<select id="rep-to"><option value="aluno">O aluno</option><option value="empresa">A empresa</option></select></label>
+        <label class="toggle"><input type="checkbox" id="rep-notes"> Usar minhas observações</label>
+      </div>
+      <div class="row"><button class="btn primary" id="rep-gen" type="button">Escrever rascunho</button><span class="status" id="rep-status" role="status"></span></div>
+      <textarea id="rep-text" rows="14" maxlength="10000"></textarea>
+      <div class="row"><button class="btn" id="rep-copy" type="button">Copiar</button><button class="btn" id="rep-save" type="button">Guardar na ficha</button></div>
+      <div id="rep-list"></div>
+    </section>
+
+    <section class="stack" data-tab="conversas" hidden>
+      <p class="small muted">O texto é a transcrição automática. Ouça o áudio para saber exatamente o que o aluno disse.</p>
+      <div id="convs"></div>
+    </section>
+  </div>
+
+  <div class="card" id="feedback-card" hidden>
+    <h2>Feedbacks anônimos</h2>
+    <p class="small muted">Os alunos escrevem sem identificação. Só a semana fica registrada.</p>
+    <div id="feedbacks"></div>
   </div>
 </main>
 <script type="module" src="professor.js"></script>

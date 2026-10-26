@@ -1,4 +1,5 @@
 import { supabase, callChat, requireLogin, renderNav, $, h, fmtSlot, rpcError } from "../lib.js";
+import { openFicha, showTab, loadFeedback, ACTIVITY_NAMES } from "./ficha.js";
 const login = await requireLogin();
 if (!login) throw new Error("redirecting");
 renderNav("professor", login.profile);
@@ -46,12 +47,15 @@ async function loadStudents(){
 async function openStudent(s){
   current = s; $("#student-card").hidden = false; $("#st-name").textContent = s.name || s.email; $("#st-display").value = s.name || "";
   const { data: st } = await supabase.from("student_settings").select("*").eq("student_id", s.id).single();
-  if (st){ $("#st-level").value = st.level; $("#st-week").value = st.classes_per_week; $("#st-day").value = st.classes_per_day; $("#st-limit").value = st.daily_ai_limit_usd; $("#st-interests").value = st.interests; $("#st-goal").value = st.goal; }
+  if (st){ $("#st-level").value = st.level; $("#st-week").value = st.classes_per_week; $("#st-day").value = st.classes_per_day; $("#st-limit").value = st.daily_ai_limit_usd; $("#st-interests").value = st.interests; $("#st-goal").value = st.goal; $("#st-focus").value = st.focus || "";
+    $("#st-visible").replaceChildren(...Object.entries(ACTIVITY_NAMES).map(([k, name]) => h("label", { class: "toggle", for: "vis-" + k },
+      h("input", { type: "checkbox", id: "vis-" + k, value: k, checked: (st.visible_activities || []).includes(k) }), name))); }
+  showTab("perfil"); $("#st-status").textContent = "";
   const today = new Date().toLocaleDateString("en-CA", { timeZone:"America/Sao_Paulo" });
   const { data: usage } = await supabase.from("ai_usage").select("cost_usd, day").eq("student_id", s.id);
   const total = (usage || []).reduce((a, r) => a + Number(r.cost_usd), 0), day = (usage || []).filter(r => r.day === today).reduce((a, r) => a + Number(r.cost_usd), 0);
   $("#st-cost").textContent = `Gasto com IA: hoje US$ ${day.toFixed(4)} · total US$ ${total.toFixed(4)}`;
-  await Promise.all([loadConversations(s.id), loadStudentClasses(s.id)]);
+  await Promise.all([loadConversations(s.id), loadStudentClasses(s.id), openFicha(s)]);
   $("#student-card").scrollIntoView({ behavior:"smooth" });
 }
 async function loadConversations(id){
@@ -82,13 +86,15 @@ $("#st-save").addEventListener("click", async () => {
   if (!current) return;
   const limit = Math.max(0, Math.min(5, Number($("#st-limit").value) || 0));
   const [a, b] = await Promise.all([
-    supabase.from("student_settings").update({ level:$("#st-level").value, daily_ai_limit_usd:limit, classes_per_week:Math.max(1, Math.min(7, Math.round(Number($("#st-week").value) || 1))), classes_per_day:Math.max(1, Math.min(4, Math.round(Number($("#st-day").value) || 1))), interests:$("#st-interests").value.trim(), goal:$("#st-goal").value.trim(), updated_at:new Date().toISOString() }).eq("student_id", current.id),
+    supabase.from("student_settings").update({ level:$("#st-level").value, daily_ai_limit_usd:limit, classes_per_week:Math.max(1, Math.min(7, Math.round(Number($("#st-week").value) || 1))), classes_per_day:Math.max(1, Math.min(4, Math.round(Number($("#st-day").value) || 1))), interests:$("#st-interests").value.trim(), goal:$("#st-goal").value.trim(), focus:$("#st-focus").value.trim(),
+      visible_activities:[...document.querySelectorAll("#st-visible input:checked")].map(i => i.value), updated_at:new Date().toISOString() }).eq("student_id", current.id),
     supabase.from("profiles").update({ name:$("#st-display").value.trim() }).eq("id", current.id)
   ]);
-  $("#st-status").textContent = a.error || b.error ? "Não deu para salvar." : "Salvo. A conversa já usa o perfil novo.";
+  $("#st-status").textContent = a.error || b.error ? "Não deu para salvar." : "Salvo. A conversa e as atividades já usam o perfil novo.";
   if (!b.error){ current.name = $("#st-display").value.trim(); $("#st-name").textContent = current.name || current.email; loadStudents(); }
 });
 loadStudents();
+loadFeedback();
 
 /* ---------- agenda: Meet link, weekly slots, upcoming classes ---------- */
 const DAYS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];

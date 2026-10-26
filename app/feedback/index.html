@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://spwcyhjqdxasgloujbyz.supabase.co wss://spwcyhjqdxasgloujbyz.supabase.co; media-src https://spwcyhjqdxasgloujbyz.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>FLUA · Feedback anônimo</title>
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<link rel="apple-touch-icon" href="../../img/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#17245F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FLUA">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<main>
+  <header id="nav"></header>
+  <div>
+    <h1>Feedback anônimo</h1>
+    <p class="muted">Conte o que está funcionando e o que pode melhorar nas aulas e na plataforma. A professora lê sem saber quem escreveu: só a semana fica registrada.</p>
+  </div>
+  <div class="card">
+    <label class="f" for="fb-text">Sua mensagem<textarea id="fb-text" rows="6" maxlength="1500"></textarea></label>
+    <div class="row"><button class="btn primary" id="fb-send" type="button">Enviar anonimamente</button></div>
+    <p class="status" id="fb-status" role="status"></p>
+  </div>
+</main>
+<script type="module" src="feedback.js"></script>
+</body>
+</html>

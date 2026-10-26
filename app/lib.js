@@ -64,7 +64,7 @@ export function renderNav(active, profile){
   const header = document.querySelector("#nav");
   if (!header) return;
   const ROOT = new URL("../", APP).href;
-  const items = [["inicio", "Início"], ["conversa", "Conversar"], ["agenda", "Agenda"]];
+  const items = [["inicio", "Início"], ["ler", "Ler"], ["praticar", "Praticar"], ["conversa", "Conversar"], ["agenda", "Agenda"]];
   if (profile && profile.role === "teacher") items.push(["professor", "Professor"]);
   header.className = "top";
   header.replaceChildren(
@@ -73,6 +73,7 @@ export function renderNav(active, profile){
         h("img", { src: ROOT + "img/flua-logo.webp", alt: "FLUA", style: "height:36px;width:auto;display:block" }))),
     h("nav", { class: "menu", "aria-label": "Menu" },
       items.map(([k, label]) => h("a", { href: APP + k + "/", class: "menu-item", "aria-current": k === active ? "page" : null }, label)),
+      h("a", { href: APP + "feedback/", class: "menu-item small", "aria-current": active === "feedback" ? "page" : null }, "Feedback anônimo"),
       h("a", { href: APP + "senha/", class: "menu-item small" }, "Trocar senha"),
       h("button", { type: "button", class: "menu-item small", onclick: logout }, "Sair")));
 }

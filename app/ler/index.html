@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://spwcyhjqdxasgloujbyz.supabase.co wss://spwcyhjqdxasgloujbyz.supabase.co; media-src https://spwcyhjqdxasgloujbyz.supabase.co; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="no-referrer">
+<title>FLUA · Leitura</title>
+<link rel="icon" type="image/png" href="../../img/favicon.png">
+<link rel="apple-touch-icon" href="../../img/apple-touch-icon.png">
+<link rel="manifest" href="../manifest.webmanifest">
+<meta name="theme-color" content="#17245F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FLUA">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700;6..12,800&display=swap">
+<link rel="stylesheet" href="../style.css">
+</head>
+<body>
+<main>
+  <header id="nav"></header>
+  <div class="card" id="read-card" hidden>
+    <p class="eyebrow">Texto escolhido para você</p>
+    <h1 id="read-title"></h1>
+    <div class="row" id="read-tags"></div>
+    <div class="row">
+      <button class="btn primary" id="listen" type="button">▶ Ouvir o texto</button>
+      <button class="icon-btn" id="speed" type="button">Velocidade 0.9x</button>
+      <label class="toggle"><input type="checkbox" id="hl"> Destacar os tempos verbais</label>
+    </div>
+    <div class="row small" id="legend" hidden><span class="tense past">Simple Past</span><span class="tense present">Simple Present</span><span class="tense cont">Present Continuous</span><span class="tense future">Future (will)</span></div>
+    <p class="small muted">Toque numa palavra sublinhada para ver a tradução e ouvir.</p>
+    <div class="reader" id="read-body" lang="en"></div>
+    <div class="sheet" id="sheet" hidden role="dialog" aria-label="Tradução">
+      <div class="row" style="justify-content:space-between"><b id="sh-word" lang="en"></b><button class="icon-btn" id="sh-close" type="button">Fechar</button></div>
+      <p id="sh-tr"></p><span class="tense" id="sh-tense" hidden></span>
+      <button class="icon-btn" id="sh-speak" type="button" style="align-self:flex-start">🔊 Ouvir de novo</button>
+    </div>
+  </div>
+  <div class="card" id="quiz-card" hidden>
+    <h2>Você entendeu?</h2>
+    <div id="quiz"></div>
+    <p class="status" id="quiz-status" role="status"></p>
+  </div>
+  <div class="card" id="turn-card" hidden>
+    <div><h2>Sua vez</h2><p class="small muted">Agora use o que você leu para falar da sua vida.</p></div>
+    <div id="your-turn"></div>
+  </div>
+  <div class="card">
+    <h3 id="new-title">Quer outro texto?</h3>
+    <p class="small muted">A IA escreve um texto novo no seu nível, sobre os seus interesses.</p>
+    <div class="row"><button class="btn" id="gen" type="button">Novo texto</button><a class="btn" id="older" href="#" hidden>Ver textos anteriores</a></div>
+    <p class="status" id="gen-status" role="status"></p>
+    <div id="history" hidden></div>
+  </div>
+</main>
+<script type="module" src="ler.js"></script>
+</body>
+</html>
