@@ -47,7 +47,7 @@ async function loadStudents(){
 async function openStudent(s){
   current = s; $("#student-card").hidden = false; $("#st-name").textContent = s.name || s.email; $("#st-display").value = s.name || "";
   const { data: st } = await supabase.from("student_settings").select("*").eq("student_id", s.id).single();
-  if (st){ $("#st-level").value = st.level; $("#st-week").value = st.classes_per_week; $("#st-day").value = st.classes_per_day; $("#st-limit").value = st.daily_ai_limit_usd; $("#st-interests").value = st.interests; $("#st-goal").value = st.goal; $("#st-focus").value = st.focus || "";
+  if (st){ $("#st-level").value = st.level; $("#st-week").value = st.classes_per_week; $("#st-day").value = st.classes_per_day; $("#st-limit").value = st.daily_ai_limit_usd; $("#st-interests").value = st.interests; $("#st-goal").value = st.goal; $("#st-focus").value = st.focus || ""; $("#st-show-goal").checked = !!st.show_goal;
     $("#st-visible").replaceChildren(...Object.entries(ACTIVITY_NAMES).map(([k, name]) => h("label", { class: "toggle", for: "vis-" + k },
       h("input", { type: "checkbox", id: "vis-" + k, value: k, checked: (st.visible_activities || []).includes(k) }), name))); }
   showTab("perfil"); $("#st-status").textContent = "";
@@ -86,7 +86,7 @@ $("#st-save").addEventListener("click", async () => {
   if (!current) return;
   const limit = Math.max(0, Math.min(5, Number($("#st-limit").value) || 0));
   const [a, b] = await Promise.all([
-    supabase.from("student_settings").update({ level:$("#st-level").value, daily_ai_limit_usd:limit, classes_per_week:Math.max(1, Math.min(7, Math.round(Number($("#st-week").value) || 1))), classes_per_day:Math.max(1, Math.min(4, Math.round(Number($("#st-day").value) || 1))), interests:$("#st-interests").value.trim(), goal:$("#st-goal").value.trim(), focus:$("#st-focus").value.trim(),
+    supabase.from("student_settings").update({ level:$("#st-level").value, daily_ai_limit_usd:limit, classes_per_week:Math.max(1, Math.min(7, Math.round(Number($("#st-week").value) || 1))), classes_per_day:Math.max(1, Math.min(4, Math.round(Number($("#st-day").value) || 1))), interests:$("#st-interests").value.trim(), goal:$("#st-goal").value.trim(), focus:$("#st-focus").value.trim(), show_goal:$("#st-show-goal").checked,
       visible_activities:[...document.querySelectorAll("#st-visible input:checked")].map(i => i.value), updated_at:new Date().toISOString() }).eq("student_id", current.id),
     supabase.from("profiles").update({ name:$("#st-display").value.trim() }).eq("id", current.id)
   ]);
