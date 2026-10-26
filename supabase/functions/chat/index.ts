@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = [
   "https://faranimarcielle-arch.github.io", // old address, kept during the move
 ];
 const MODEL = "claude-haiku-5-5";
-const VERSION = "2026-10-26c"; // shown in the teacher panel, to confirm which code is deployed
+const VERSION = "2026-10-26d"; // shown in the teacher panel, to confirm which code is deployed
 const PRICE = { input: 0.10, output: 0.50 }; // US$ per million tokens, claude-haiku-5-5
 const MAX_TURNS = 60;
 const OPENER = (name: string) => `Hi ${name}! I'm Flo. What are you working on these days?`;
@@ -289,10 +289,10 @@ Reply with only JSON: {"ok": boolean, "understandable": boolean, "hint_pt": "if 
 
 // Personalised situations for each activity, created on demand (3 at a time) from the learner's interests and goal.
 const ITEM_SHAPES: Record<string, string> = {
-  mission: `Activity "Missão Real": a role-play where the learner talks to a character to reach a real goal. Each item: {"title": "short Portuguese title", "char": "the character's role in Portuguese, never a personal name, e.g. 'Atendente da academia'", "role": "who the character is and the situation, in English, one sentence, without a personal name", "brief_pt": "the learner's mission in Portuguese, 1-2 sentences", "opener": "the character's first line in simple English", "goals": [exactly 3 {"pt": "goal in Portuguese", "en": "goal in English"}], "keywords": [6 short English chunks that help], "starters": [3 English sentence starters, one per goal], "challenge": "a real-life challenge for this week in Portuguese, doable outside class"}`,
-  detective: `Activity "Detetive de Perguntas": the learner discovers facts about a character ONLY by asking questions. Each item: {"title": "short Portuguese title", "char": "the character's role in Portuguese, never a personal name, e.g. 'Colega de trabalho'", "brief_pt": "what to discover, in Portuguese, referring to the character by their role", "facts": [exactly 3 {"id": "one-word id", "pt": "what to find out, in Portuguese", "en": "the fact itself, in English"}], "extra": "2-3 extra details the character can share only if asked, in English", "words": [4-5 English question openers such as "What…?", "Did you…?"], "focus": "short Portuguese label of the question form practiced", "challenge": "a real-life challenge for this week in Portuguese"}`,
+  mission: `Activity "Missão Real": a role-play where the learner talks to a character to reach a real goal. Each item: {"title": "short Portuguese title", "char": "a female first name or the character's role in Portuguese, e.g. 'Helena' or 'Atendente da academia'", "role": "who the character is (a woman) and the situation, in English, one sentence", "brief_pt": "the learner's mission in Portuguese, 1-2 sentences", "opener": "the character's first line in simple English", "goals": [exactly 3 {"pt": "goal in Portuguese", "en": "goal in English"}], "keywords": [6 short English chunks that help], "starters": [3 English sentence starters, one per goal], "challenge": "a real-life challenge for this week in Portuguese, doable outside class"}`,
+  detective: `Activity "Detetive de Perguntas": the learner discovers facts about a character ONLY by asking questions. Each item: {"title": "short Portuguese title", "char": "a female first name or the character's role in Portuguese, e.g. 'Helena' or 'Colega de trabalho'", "brief_pt": "what to discover, in Portuguese", "facts": [exactly 3 {"id": "one-word id", "pt": "what to find out, in Portuguese", "en": "the fact itself, in English"}], "extra": "2-3 extra details the character can share only if asked, in English", "words": [4-5 English question openers such as "What…?", "Did you…?"], "focus": "short Portuguese label of the question form practiced", "challenge": "a real-life challenge for this week in Portuguese"}`,
   choice: `Activity "Escolha e Defenda": an everyday dilemma between two options; the learner chooses and justifies. Each item: {"q_pt": "the dilemma in Portuguese, one sentence", "a": "option A, short, Portuguese", "b": "option B, short, Portuguese", "en": "the dilemma in English"}`,
-  voice: `Activity "Mensagem de Voz": a voice message the learner listens to and answers by meaning. Each item: {"from": "who sends it, in Portuguese, never a personal name, e.g. 'Colega de trabalho' or 'Atendente da clínica'", "text": "the message in natural spoken English, 2-3 sentences, with one request, change or invitation; address the learner as {name}; the sender never says their own name", "meaning": "what it means and what a good reply does, in English", "focus": "short Portuguese label of what is practiced", "challenge": "a real-life challenge for this week in Portuguese"}`,
+  voice: `Activity "Mensagem de Voz": a voice message the learner listens to and answers by meaning. Each item: {"from": "who sends it, in Portuguese: a female first name and/or her role, e.g. 'Helena, colega de trabalho' or 'Atendente da clínica'", "text": "the message in natural spoken English, 2-3 sentences, with one request, change or invitation; address the learner as {name}", "meaning": "what it means and what a good reply does, in English", "focus": "short Portuguese label of what is practiced", "challenge": "a real-life challenge for this week in Portuguese"}`,
 };
 async function itemsNew(l: Learner, b: Record<string, unknown>) {
   const activity = s(b.activity, 20);
@@ -304,7 +304,7 @@ async function itemsNew(l: Learner, b: Record<string, unknown>) {
   const { data: prev } = await admin.from("activity_items").select("content").eq("student_id", l.id).eq("activity", activity).order("created_at", { ascending: false }).limit(9);
   const before = (prev ?? []).map((r) => { const c = r.content as Record<string, unknown>; return s(c.title || c.q_pt || c.text, 120); }).filter(Boolean);
   const j = await askJSON(l, "items", `${ctx(l)}
-Create 3 different situations for this activity, for this learner. Characters are identified only by their role (receptionist, coworker, support agent…), never by a personal name, because they are voiced by the same female voice. Base them on the learner's interests, work and communicative goal, and let them use the structures in focus naturally. Language for CEFR ${l.level}. Realistic adult situations, never childish.${before.length ? ` Do not repeat these earlier situations: ${before.join("; ")}.` : ""}
+Create 3 different situations for this activity, for this learner. Every character the learner talks to is a woman, because all of them are voiced by the same female voice: use a female first name or just her role (receptionist, coworker, support agent…), never a male name or a male character. Base them on the learner's interests, work and communicative goal, and let them use the structures in focus naturally. Language for CEFR ${l.level}. Realistic adult situations, never childish.${before.length ? ` Do not repeat these earlier situations: ${before.join("; ")}.` : ""}
 ${ITEM_SHAPES[activity]}
 Reply with only JSON: {"items": [3 items]}`, 10000);
   const items = arr(j.items).filter((x) => x && typeof x === "object").slice(0, 3);
@@ -338,7 +338,7 @@ async function missionTurn(l: Learner, b: Record<string, unknown>) {
   const goals = arr(m.goals);
   await checkLimit(l);
   const j = await askJSON(l, "mission", `${ctx(l)}
-Role-play activity "Missão Real". You play ${s(m.role, 300)} (${s(m.char, 60)}). You have no personal name: if asked, say something natural like "I'm the receptionist". Stay in character. Use simple, natural English for CEFR ${l.level}: 1-2 short sentences, reacting like a real person.
+Role-play activity "Missão Real". You play ${s(m.role, 300)} (${s(m.char, 60)}). You are a woman; if you have no name and are asked, say something natural like "I'm the receptionist". Stay in character. Use simple, natural English for CEFR ${l.level}: 1-2 short sentences, reacting like a real person.
 The learner's mission (Portuguese): ${s(m.brief_pt, 400)}
 Mission goals: ${goals.map((g, i) => `${i + 1}) ${s(g.en, 200)}`).join("; ")}
 This is free conversation: do NOT correct the learner. If a message cannot be understood, ask for clarification naturally, as the character would. Otherwise move the conversation forward and, if goals are missing, ask something that invites the learner to cover them. When all goals are met, close the conversation warmly.
@@ -357,7 +357,7 @@ async function detectiveAsk(l: Learner, b: Record<string, unknown>) {
   if (!q) throw new HttpError(400, "Pergunta vazia.");
   await checkLimit(l);
   const j = await askJSON(l, "detective", `${ctx(l)}
-Activity "Detetive de Perguntas" (guided practice: forming questions). You play this person: ${s(c.char, 60)}. You have no personal name. The learner must discover these facts only by asking questions:
+Activity "Detetive de Perguntas" (guided practice: forming questions). You play this person, a woman: ${s(c.char, 60)}. The learner must discover these facts only by asking questions:
 ${arr(c.facts).map((f) => `- ${s(f.id, 30)}: ${s(f.en, 200)}`).join("\n")}
 ${s(c.extra, 400)}
 ${stage > 0 ? "The learner is reformulating after feedback. Their previous question was: " + s(b.prev_q, 200) : ""}
