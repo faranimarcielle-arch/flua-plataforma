@@ -17,6 +17,7 @@ async function googleStatus(){
       ? "Google Agenda e e-mails: conectados." + (r.sent ? ` ${r.sent} aviso(s) enviado(s) agora.` : "")
       : "Google Agenda e e-mails: ainda não conectados.";
     $("#gcal-connect").textContent = r && r.google ? "Conectar de novo" : "Conectar Google Agenda";
+    $("#fn-version").textContent = "Versão da função no servidor: " + (r && r.version ? r.version : "antiga (cole o código novo na bright-function)");
   }catch(e){ $("#gcal-status").textContent = "Google Agenda: " + (e.msg || "erro ao conectar."); }
 }
 $("#gcal-connect").addEventListener("click", async () => {

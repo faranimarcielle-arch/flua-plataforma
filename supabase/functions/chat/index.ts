@@ -14,6 +14,7 @@ const ALLOWED_ORIGINS = [
   "https://faranimarcielle-arch.github.io", // old address, kept during the move
 ];
 const MODEL = "claude-haiku-5-5";
+const VERSION = "2026-10-26c"; // shown in the teacher panel, to confirm which code is deployed
 const PRICE = { input: 0.10, output: 0.50 }; // US$ per million tokens, claude-haiku-5-5
 const MAX_TURNS = 60;
 const OPENER = (name: string) => `Hi ${name}! I'm Flo. What are you working on these days?`;
@@ -101,10 +102,26 @@ async function ask(l: Learner, kind: string, params: { system: string; messages:
   return { text, content: res.content };
 }
 
+// Tolerant JSON reading: strips code fences or text around the object and escapes raw line breaks inside strings.
+function escapeControlsInStrings(t: string) {
+  let out = "", inStr = false, esc = false;
+  for (const ch of t) {
+    if (inStr) {
+      if (esc) { esc = false; out += ch; continue; }
+      if (ch === "\\") { esc = true; out += ch; continue; }
+      if (ch === '"') inStr = false;
+      out += ch === "\n" ? "\\n" : ch === "\r" ? "\\r" : ch === "\t" ? "\\t" : ch;
+    } else { if (ch === '"') inStr = true; out += ch; }
+  }
+  return out;
+}
 function parseJSON(t: string): Record<string, unknown> | null {
-  try { return JSON.parse(t); } catch { /* fall through */ }
-  const m = t.match(/\{[\s\S]*\}/);
-  if (m) { try { return JSON.parse(m[0]); } catch { /* ignore */ } }
+  const start = t.indexOf("{"), end = t.lastIndexOf("}");
+  const candidates = [t, start >= 0 && end > start ? t.slice(start, end + 1) : ""];
+  for (const c of candidates) {
+    if (!c) continue;
+    for (const v of [c, escapeControlsInStrings(c)]) { try { return JSON.parse(v); } catch { /* next */ } }
+  }
   return null;
 }
 
@@ -606,7 +623,7 @@ async function processNotice(token: string, n: Notice) {
 
 async function agendaNotices() {
   const token = await googleAccess();
-  if (!token) return { sent: 0, google: false };
+  if (!token) return { sent: 0, google: false, version: VERSION };
   const { data, error } = await admin.rpc("claim_booking_notices", { p_limit: 10 });
   if (error) throw error;
   let sent = 0;
@@ -617,7 +634,7 @@ async function agendaNotices() {
       await admin.from("bookings").update({ sync_lock: null, sync_error: String(e).slice(0, 500) }).eq("id", n.id);
     }
   }
-  return { sent, google: true };
+  return { sent, google: true, version: VERSION };
 }
 
 Deno.serve(async (req) => {
