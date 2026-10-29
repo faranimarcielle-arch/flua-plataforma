@@ -12,14 +12,32 @@ function pickVoice(){
   const female = us.filter(v => FEMALE.test(v.name) && !/\bmale/i.test(v.name.replace(/female/i, "")));
   voice = female.find(v => /natural|online|neural/i.test(v.name)) || female[0] || us.find(v => !MALE.test(v.name)) || null;
 }
-if (canSpeak){ pickVoice(); speechSynthesis.addEventListener("voiceschanged", pickVoice); }
+if (canSpeak){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+// Phones only allow speech that starts right after a tap. The first tap anywhere "unlocks" it with a silent
+// utterance, so Flo's replies, which arrive seconds later, can still be heard.
+let unlocked = false;
+function unlockSpeech(){
+  if (unlocked || !canSpeak) return;
+  unlocked = true;
+  try{ const u = new SpeechSynthesisUtterance(" "); u.volume = 0; speechSynthesis.speak(u); }catch(e){}
+}
+if (canSpeak) ["pointerdown", "touchend", "keydown"].forEach(ev => document.addEventListener(ev, unlockSpeech, { capture: true, passive: true }));
 export function speak(text, rate = 0.95, done){
   if (!canSpeak || !text){ done && done(); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  if (voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = "en-US";
-  u.rate = rate; u.onend = u.onerror = () => done && done();
-  speechSynthesis.speak(u);
+  if (!voice) pickVoice();
+  let finished = false, keep = null, guard = null;
+  const finish = () => { if (finished) return; finished = true; clearInterval(keep); clearTimeout(guard); done && done(); };
+  const go = () => {
+    const u = new SpeechSynthesisUtterance(text);
+    if (voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = "en-US";
+    u.rate = rate; u.onend = u.onerror = finish;
+    speechSynthesis.speak(u);
+    // Android Chrome sometimes pauses long speech or never reports the end.
+    keep = setInterval(() => { if (speechSynthesis.paused) speechSynthesis.resume(); }, 1000);
+    guard = setTimeout(finish, Math.max(5000, text.length * 110 / rate));
+  };
+  // Speaking right after cancel() is dropped on some phones, so wait a moment.
+  if (speechSynthesis.speaking || speechSynthesis.pending){ speechSynthesis.cancel(); setTimeout(go, 150); } else go();
 }
 export const stopSpeech = () => { if (canSpeak) speechSynthesis.cancel(); };
 export const speakBtn = (text) => h("button", { type: "button", class: "icon-btn", onclick: () => speak(text) }, "🔊 Ouvir");

@@ -1,4 +1,6 @@
 import { supabase, requireLogin, callChat, renderNav, $, h } from "../lib.js";
+import { speak as say, stopSpeech } from "../pratica.js";
+const speak = (text, done) => say(text, 0.95, done);
 
 const login = await requireLogin();
 if (!login) throw new Error("redirecting");
@@ -6,34 +8,15 @@ const userId = login.session.user.id;
 renderNav("conversa", login.profile);
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const canSpeak = "speechSynthesis" in window;
 const canRecord = !!(navigator.mediaDevices && window.MediaRecorder);
 $("#support").textContent = (SR ? "" : "Este navegador não reconhece voz: use o Google Chrome ou o Microsoft Edge. ") +
   "Para usar fone de ouvido, escolha-o como microfone e saída de som antes de começar. Sua voz fica gravada para o professor poder ouvir.";
 
-let voice = null;
-// Flo has a female voice: known female US voices first (natural ones before the rest), never a known male one.
-const FEMALE = /jenny|aria|ava|emma|michelle|samantha|allison|susan|zira|google us english|female/i;
-const MALE = /guy|christopher|eric|roger|steffan|andrew|brian|david|mark|alex\b|fred|daniel|tom\b|male/i;
-function pickVoice(){
-  if (!canSpeak) return;
-  const us = speechSynthesis.getVoices().filter(v => /^en[-_]US/i.test(v.lang));
-  const female = us.filter(v => FEMALE.test(v.name) && !/\bmale/i.test(v.name.replace(/female/i, "")));
-  voice = female.find(v => /natural|online|neural/i.test(v.name)) || female[0] || us.find(v => !MALE.test(v.name)) || null;
-}
-if (canSpeak){ pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
-function speak(text, done){
-  if (!canSpeak || !text){ done && done(); return; }
-  speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  if (voice){ u.voice = voice; u.lang = voice.lang; } else u.lang = "en-US";
-  u.rate = 0.95; u.onend = u.onerror = () => done && done();
-  speechSynthesis.speak(u);
-}
-
 /* ---------- conversation ---------- */
 let conversationId = null, turns = 0, busy = false;
-const bubble = (who, text, cls) => h("div", {class:"msg " + cls}, h("span", {class:"who"}, who), text);
+// Flo's messages get a replay button: if the phone blocked the speech, one tap plays it.
+const bubble = (who, text, cls) => h("div", {class:"msg " + cls}, h("span", {class:"who"}, who), text,
+  cls === "ai" ? h("div", {style:"margin-top:6px"}, h("button", {type:"button", class:"icon-btn", onclick:() => speak(text)}, "🔊 Ouvir")) : null);
 function addBubble(who, text, cls){ const b = bubble(who, text, cls); $("#chat").append(b); b.scrollIntoView({block:"nearest", behavior:"smooth"}); return b; }
 function setState(kind, text){
   $("#mic").classList.toggle("listening", kind === "listening");
@@ -123,7 +106,7 @@ function stopAudio(){
 async function startRecording(target){
   if (!SR){ $("#status").textContent = "Reconhecimento de voz indisponível: use o Chrome ou o Edge, ou escreva a mensagem."; return; }
   if (rec || recording || busy) return;
-  if (canSpeak) speechSynthesis.cancel();
+  stopSpeech();
   ptt = target || null; onHeard = target ? target.done : sendLearner;
   kept = ""; partial = ""; restarts = 0; recording = true; $("#status").textContent = "";
   if (!target) live = addBubble("Você", "…", "me live");
@@ -135,7 +118,14 @@ async function startRecording(target){
 }
 function sendRecording(){ if (!recording) return; recording = false; try{ rec ? rec.stop() : finishRecording(); }catch(e){ finishRecording(); } }
 function cancelRecording(){ onHeard = null; recording = false; try{ rec && rec.abort(); }catch(e){} if (!rec) finishRecording(); }
+// The recogniser reports its end more than once; only the first call (while something is recording) counts.
+let finishing = false;
 async function finishRecording(){
+  if (finishing || (!onHeard && !live && !ptt && !recorder)) return;
+  finishing = true;
+  try{ await finishRecordingNow(); }finally{ finishing = false; }
+}
+async function finishRecordingNow(){
   const text = heardSoFar(), cb = onHeard, target = ptt;
   kept = ""; partial = ""; onHeard = null; ptt = null;
   if (live){ live.remove(); live = null; }
@@ -146,7 +136,7 @@ async function finishRecording(){
   if (cb && text) cb(text, blob);
   else if (cb && !text) $("#status").textContent = "Não ouvi nada. Toque no microfone e tente de novo.";
 }
-function stopAll(){ cancelRecording(); if (canSpeak) speechSynthesis.cancel(); setState("idle", IDLE); }
+function stopAll(){ cancelRecording(); stopSpeech(); setState("idle", IDLE); }
 $("#mic").addEventListener("click", () => {
   if (recording){ if (!ptt) sendRecording(); return; }
   if ($("#mic").classList.contains("busy")) return;

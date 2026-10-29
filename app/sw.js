@@ -1,7 +1,7 @@
 // FLUA service worker: makes the platform installable and keeps the last version of each page for weak connections.
 // Network first, so students always get the newest version when online. Only this site's own files are cached:
 // requests to Supabase, the AI and other sites are never touched.
-const CACHE = "flua-v3";
+const CACHE = "flua-v4";
 self.addEventListener("install", (e) => self.skipWaiting());
 self.addEventListener("activate", (e) => e.waitUntil(
   caches.keys().then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())
