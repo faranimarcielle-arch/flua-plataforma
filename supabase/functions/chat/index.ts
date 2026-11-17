@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = [
   "https://faranimarcielle-arch.github.io", // old address, kept during the move
 ];
 const MODEL = "claude-haiku-5-5";
-const VERSION = "2026-11-17a"; // shown in the teacher panel, to confirm which code is deployed
+const VERSION = "2026-11-17b"; // shown in the teacher panel, to confirm which code is deployed
 const PRICE = { input: 0.10, output: 0.50 }; // US$ per million tokens, claude-haiku-5-5
 const MAX_TURNS = 60;
 const OPENER = (name: string) => `Hi ${name}! I'm Flo. What are you working on these days?`;
@@ -481,7 +481,7 @@ Reply with only JSON: {"report": "the full report text"}`, 8000);
 // the invitation, the change and the cancellation. A record e-mail goes to the student with a copy to her.
 const TZ = "America/Sao_Paulo";
 const TEACHER_EMAIL = Deno.env.get("TEACHER_EMAIL") ?? "marciellefarani@flua.onworkspace.com";
-const AGENDA_URL = Deno.env.get("APP_URL") ?? "https://faranimarcielle-arch.github.io/flua-plataforma/app/agenda/";
+const AGENDA_URL = Deno.env.get("APP_URL") ?? "https://app.fluaenglish.com.br/app/agenda/";
 const CLASS_MINUTES = 30;
 
 let googleToken = { value: "", expires: 0 };

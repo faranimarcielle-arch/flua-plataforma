@@ -16,8 +16,8 @@ A metodologia é **comunicativa**:
 - Não há jogos mecânicos: toda atividade tem um objetivo de comunicação real.
 
 **Endereços:**
-- Hoje: https://faranimarcielle-arch.github.io/flua-plataforma/
-- Em configuração: https://app.fluaenglish.com.br. O www.fluaenglish.com.br fica livre para um site institucional.
+- Endereço: https://app.fluaenglish.com.br (o antigo github.io redireciona para ele)
+- O www.fluaenglish.com.br fica livre para um site institucional.
 - Funciona no celular e pode ser instalado como aplicativo (PWA).
 
 ## 2. O que o aluno vê
