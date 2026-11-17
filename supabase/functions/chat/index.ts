@@ -14,7 +14,7 @@ const ALLOWED_ORIGINS = [
   "https://faranimarcielle-arch.github.io", // old address, kept during the move
 ];
 const MODEL = "claude-haiku-5-5";
-const VERSION = "2026-10-26d"; // shown in the teacher panel, to confirm which code is deployed
+const VERSION = "2026-11-17a"; // shown in the teacher panel, to confirm which code is deployed
 const PRICE = { input: 0.10, output: 0.50 }; // US$ per million tokens, claude-haiku-5-5
 const MAX_TURNS = 60;
 const OPENER = (name: string) => `Hi ${name}! I'm Flo. What are you working on these days?`;
@@ -594,7 +594,7 @@ async function sendMail(token: string, to: string, subject: string, text: string
 async function processNotice(token: string, n: Notice) {
   const cal = "https://www.googleapis.com/calendar/v3/calendars/primary/events";
   const first = (n.name || "").split(" ")[0] || "aluno(a)";
-  let subject = "", text = "", eventId = n.gcal_event_id;
+  let subject = "", text = "", eventId = n.gcal_event_id, mailError: string | null = null;
   if (n.status === "marcada" && !n.notified_status) {
     if (!eventId) {
       const ev = await google(token, "POST", `${cal}?sendUpdates=all`, eventBody(n));
@@ -616,9 +616,12 @@ async function processNotice(token: string, n: Notice) {
   }
   if (subject) {
     text += `\n\nVer ou mudar suas aulas: ${AGENDA_URL}\n\nAbraços,\nFLUA English\n\nE-mail automático da plataforma FLUA. Dúvidas: WhatsApp (21) 99699-3031.`;
-    await sendMail(token, n.email, subject, text);
+    // The e-mail is a record, not the main notice (Google Calendar already told the student), so a failure
+    // here is logged and the booking is still marked done; retrying would resend the calendar update.
+    try { await sendMail(token, n.email, subject, text); }
+    catch (e) { mailError = String(e).slice(0, 500); console.error("agenda e-mail", n.id, e); }
   }
-  await admin.from("bookings").update({ notified_status: n.status, notified_starts_at: n.starts_at, gcal_event_id: eventId, sync_lock: null, sync_error: null }).eq("id", n.id);
+  await admin.from("bookings").update({ notified_status: n.status, notified_starts_at: n.starts_at, gcal_event_id: eventId, sync_lock: null, sync_error: mailError }).eq("id", n.id);
 }
 
 async function agendaNotices() {
