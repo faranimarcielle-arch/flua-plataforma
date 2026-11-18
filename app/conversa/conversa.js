@@ -8,9 +8,15 @@ const userId = login.session.user.id;
 renderNav("conversa", login.profile);
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-const canRecord = !!(navigator.mediaDevices && window.MediaRecorder);
-$("#support").textContent = (SR ? "" : "Este navegador não reconhece voz: use o Google Chrome ou o Microsoft Edge. ") +
-  "Para usar fone de ouvido, escolha-o como microfone e saída de som antes de começar. Sua voz fica gravada para o professor poder ouvir.";
+// On phones the microphone serves one thing at a time: recording the audio as well leaves speech
+// recognition hearing nothing. So the audio copy for the teacher is kept only on computers.
+const PHONE = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const IOS_APP = /iPhone|iPad|iPod/i.test(navigator.userAgent) && (navigator.standalone || matchMedia("(display-mode: standalone)").matches);
+const canRecord = !PHONE && !!(navigator.mediaDevices && window.MediaRecorder);
+$("#support").textContent =
+  (!SR ? (/iPhone|iPad|iPod/i.test(navigator.userAgent) ? "Este aparelho não reconhece voz aqui: abra a FLUA no Safari, atualizado. " : "Este navegador não reconhece voz: use o Google Chrome ou o Microsoft Edge. ") : "") +
+  (IOS_APP ? "No iPhone, se o microfone não reconhecer a sua fala no app, abra a FLUA pelo Safari. " : "") +
+  (PHONE ? "No celular, a professora recebe o texto do que você disse." : "Para usar fone de ouvido, escolha-o como microfone e saída de som antes de começar. Sua voz fica gravada para a professora poder ouvir.");
 
 /* ---------- conversation ---------- */
 let conversationId = null, turns = 0, busy = false;
